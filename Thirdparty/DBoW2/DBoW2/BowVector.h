@@ -53,12 +53,13 @@ enum ScoringType
 };
 
 /// Vector of words to represent images
-class BowVector: 
+class BowVector:
 	public std::map<WordId, WordValue>
 {
 public:
+	typedef std::map<WordId, WordValue> super;
 
-	/** 
+	/**
 	 * Constructor
 	 */
 	BowVector(void);
@@ -67,7 +68,7 @@ public:
 	 * Destructor
 	 */
 	~BowVector(void);
-	
+
 	/**
 	 * Adds a value to a word value existing in the vector, or creates a new
 	 * word with the given value
@@ -75,7 +76,7 @@ public:
 	 * @param v value to create the word with, or to add to existing word
 	 */
 	void addWeight(WordId id, WordValue v);
-	
+
 	/**
 	 * Adds a word with a value to the vector only if this does not exist yet
 	 * @param id word id to look for
@@ -84,18 +85,18 @@ public:
 	void addIfNotExist(WordId id, WordValue v);
 
 	/**
-	 * L1-Normalizes the values in the vector 
+	 * L1-Normalizes the values in the vector
 	 * @param norm_type norm used
 	 */
 	void normalize(LNorm norm_type);
-	
+
 	/**
 	 * Prints the content of the bow vector
 	 * @param out stream
 	 * @param v
 	 */
 	friend std::ostream& operator<<(std::ostream &out, const BowVector &v);
-	
+
 	/**
 	 * Saves the bow vector as a vector in a matlab file
 	 * @param filename

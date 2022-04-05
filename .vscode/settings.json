@@ -1,44 +1,45 @@
 {
-    "doxdocgen.generic.paramTemplate": "@param[in] {param} ",
+	"doxdocgen.generic.paramTemplate": "@param[in] {param} ",
 	"todo-tree.highlights.defaultHighlight": {
-	"icon": "alert",
-	"type": "text",
-	"foreground": "red",
-	"iconColour": "green"
+		"icon": "alert",
+		"type": "text",
+		"foreground": "red",
+		"iconColour": "green"
 	},
 	"todo-tree.general.tags": [
-	"?",
-	"!",
-	" Step "
+		"?",
+		"!",
+		" Step "
 	],
 	"todo-tree.highlights.customHighlight": {
-	" Step ": {
-	"foreground": "#7CFC00",
-	"icon": "question",
-	"iconColour": "green",
-	"type": "text-and-comment",
-	"hideFromTree": true
-	},
-	"?": {
-	"foreground": "yellow",
-	"icon": "question",
-	"iconColour": "yellow",
-	"type": "text-and-comment"
-	},
-	"!": {
-	"foreground": "red",
-	"icon": "issue-opened",
-	"iconColour": "red",
-	"type": "text-and-comment"
-	}
+		" Step ": {
+			"foreground": "#7CFC00",
+			"icon": "question",
+			"iconColour": "green",
+			"type": "text-and-comment",
+			"hideFromTree": true
+		},
+		"?": {
+			"foreground": "yellow",
+			"icon": "question",
+			"iconColour": "yellow",
+			"type": "text-and-comment"
+		},
+		"!": {
+			"foreground": "red",
+			"icon": "issue-opened",
+			"iconColour": "red",
+			"type": "text-and-comment"
+		}
 	},
 	"todo-tree.general.revealBehaviour": "highlight todo",
 	"todo-tree.tree.showCountsInTree": true,
-	"todo-tree.filtering.excludeGlobs":[
-	"**/*.txt",
-	"**/*.md"
+	"todo-tree.filtering.excludeGlobs": [
+		"**/*.txt",
+		"**/*.md"
 	],
 	"files.associations": {
+		"*.m": "matlab",
 		"*.cc": "cpp",
 		"vector": "cpp",
 		"mutex": "cpp",
@@ -101,6 +102,25 @@
 		"xstddef": "cpp",
 		"xstring": "cpp",
 		"xtr1common": "cpp",
-		"xutility": "cpp"
+		"xutility": "cpp",
+		"clocale": "cpp",
+		"cwctype": "cpp",
+		"array": "cpp",
+		"atomic": "cpp",
+		"bit": "cpp",
+		"*.tcc": "cpp",
+		"complex": "cpp",
+		"condition_variable": "cpp",
+		"unordered_set": "cpp",
+		"functional": "cpp",
+		"memory_resource": "cpp",
+		"optional": "cpp",
+		"random": "cpp",
+		"regex": "cpp",
+		"string_view": "cpp",
+		"shared_mutex": "cpp",
+		"cinttypes": "cpp",
+		"typeindex": "cpp",
+		"variant": "cpp"
 	}
 }

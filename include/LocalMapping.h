@@ -4,9 +4,9 @@
  * @brief 局部建图线程
  * @version 0.1
  * @date 2019-04-29
- * 
+ *
  * @copyright Copyright (c) 2019
- * 
+ *
  */
 
 /**
@@ -93,8 +93,8 @@ public:
     void RequestReset();
     /**
      * @brief 检查是否要把当前的局部建图线程停止,如果当前线程没有那么检查请求标志,如果请求标志被置位那么就设置为停止工作.由run函数调用
-     * @return true 
-     * @return false 
+     * @return true
+     * @return false
      */
     bool Stop();
     /** @brief 释放当前还在缓冲区中的关键帧指针  */
@@ -135,7 +135,7 @@ protected:
     bool CheckNewKeyFrames();
     /**
      * @brief 处理列表中的关键帧
-     * 
+     *
      * - 计算Bow，加速三角化新的MapPoints
      * - 关联当前关键帧至MapPoints，并更新MapPoints的平均观测方向和观测距离范围
      * - 插入关键帧，更新Covisibility图和Essential图
@@ -211,7 +211,7 @@ protected:
     /// 存储当前关键帧生成的地图点,也是等待检查的地图点列表
     std::list<MapPoint*> mlpRecentAddedMapPoints;
 
-    /// 操作关键帧列表时使用的互斥量 
+    /// 操作关键帧列表时使用的互斥量
     std::mutex mMutexNewKFs;
 
     /// 终止BA的标志
