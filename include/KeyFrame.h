@@ -439,6 +439,9 @@ namespace ORB_SLAM2
         /// 在操作和特征点有关的变量的时候的互斥锁
         std::mutex mMutexFeatures;
 
+    public:
+        KeyFrame();
+
     private:
         friend class boost::serialization::access;
         template <class Archive>

@@ -182,15 +182,13 @@ namespace ORB_SLAM2
     template <class Archive>
     void Map::serialize(Archive &ar, const unsigned int version)
     {
-        // TODO: remember to change mnMaxKFid
-        unique_lock<mutex> lockMapUpdate(mMutexMapUpdate);
-        unique_lock<mutex> lockPointCreation(mMutexPointCreation);
-        ar >> mspMapPoints;
-        ar >> mspKeyFrames;
-        ar >> mvpReferenceMapPoints;
-        ar >> mvpKeyFrameOrigins;
-        ar >> mnMaxKFid;
-        ar >> mnBigChangeIdx;
+        unique_lock<mutex> lock_MapUpdate(mMutexMapUpdate);
+        unique_lock<mutex> lock_Map(mMutexMap);
+        ar &mspMapPoints;
+        ar &mvpKeyFrameOrigins;
+        ar &mspKeyFrames;
+        ar &mvpReferenceMapPoints;
+        ar &mnMaxKFid &mnBigChangeIdx;
     }
     template void Map::serialize(boost::archive::binary_iarchive &, const unsigned int);
     template void Map::serialize(boost::archive::binary_oarchive &, const unsigned int);

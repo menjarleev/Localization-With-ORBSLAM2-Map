@@ -63,7 +63,7 @@ namespace ORB_SLAM2
         // Check settings file
         cv::FileStorage fsSettings(strSettingsFile.c_str(), //将配置文件名转换成为字符串
                                    cv::FileStorage::READ);  //只读
-        //如果打开失败，就输出调试信息
+                                                            //如果打开失败，就输出调试信息
         if (!fsSettings.isOpened())
         {
             cerr << "Failed to open settings file at: " << strSettingsFile << endl;
@@ -109,67 +109,73 @@ namespace ORB_SLAM2
         if (load_map && !mapfile.empty() && LoadMap(mapfile))
         {
             bReuseMap = true;
+            {
+                unique_lock<mutex> mutex_mode_lock(mMutexMode);
+                mbActivateLocalizationMode = true;
+                mbDeactivateLocalizationMode = false;
+            }
         }
         else
         {
             // Create Drawers. These are used by the Viewer
             //这里的帧绘制器和地图绘制器将会被可视化的Viewer所使用
-            mpFrameDrawer = new FrameDrawer(mpMap);
+            mpFrameDrawer = new FrameDrawer(mpMap, bReuseMap);
             mpMapDrawer = new MapDrawer(mpMap, strSettingsFile);
-            //在本主进程中初始化追踪线程
-            // Initialize the Tracking thread
-            //(it will live in the main thread of execution, the one that called this constructor)
-            mpTracker = new Tracking(this,               //现在还不是很明白为什么这里还需要一个this指针  TODO
-                                     mpVocabulary,       //字典
-                                     mpFrameDrawer,      //帧绘制器
-                                     mpMapDrawer,        //地图绘制器
-                                     mpMap,              //地图
-                                     mpKeyFrameDatabase, //关键帧地图
-                                     strSettingsFile,    //设置文件路径
-                                     mSensor);           //传感器类型iomanip
+        }
+        //在本主进程中初始化追踪线程
+        // Initialize the Tracking thread
+        //(it will live in the main thread of execution, the one that called this constructor)
+        mpTracker = new Tracking(this,               //现在还不是很明白为什么这里还需要一个this指针  TODO
+                                 mpVocabulary,       //字典
+                                 mpFrameDrawer,      //帧绘制器
+                                 mpMapDrawer,        //地图绘制器
+                                 mpMap,              //地图
+                                 mpKeyFrameDatabase, //关键帧地图
+                                 strSettingsFile,    //设置文件路径
+                                 mSensor,
+                                 bReuseMap); //传感器类型iomanip
 
-            //初始化局部建图线程并运行
-            // Initialize the Local Mapping thread and launch
-            mpLocalMapper = new LocalMapping(mpMap,                 //指定使iomanip
-                                             mSensor == MONOCULAR); // TODO 为什么这个要设置成为MONOCULAR？？？
-            //运行这个局部建图线程
-            mptLocalMapping = new thread(&ORB_SLAM2::LocalMapping::Run, //这个线程会调用的函数
-                                         mpLocalMapper);                //这个调用函数的参数
+        //初始化局部建图线程并运行
+        // Initialize the Local Mapping thread and launch
+        mpLocalMapper = new LocalMapping(mpMap,                 //指定使iomanip
+                                         mSensor == MONOCULAR); // TODO 为什么这个要设置成为MONOCULAR？？？
+        //运行这个局部建图线程
+        mptLocalMapping = new thread(&ORB_SLAM2::LocalMapping::Run, //这个线程会调用的函数
+                                     mpLocalMapper);                //这个调用函数的参数
 
-            // Initialize the Loop Closing thread and launchiomanip
-            mpLoopCloser = new LoopClosing(mpMap,                 //地图
-                                           mpKeyFrameDatabase,    //关键帧数据库
-                                           mpVocabulary,          // ORB字典
-                                           mSensor != MONOCULAR); //当前的传感器是否是单目
-            //创建回环检测线程
-            mptLoopClosing = new thread(&ORB_SLAM2::LoopClosing::Run, //线程的主函数
-                                        mpLoopCloser);                //该函数的参数
+        // Initialize the Loop Closing thread and launchiomanip
+        mpLoopCloser = new LoopClosing(mpMap,                 //地图
+                                       mpKeyFrameDatabase,    //关键帧数据库
+                                       mpVocabulary,          // ORB字典
+                                       mSensor != MONOCULAR); //当前的传感器是否是单目
+        //创建回环检测线程
+        mptLoopClosing = new thread(&ORB_SLAM2::LoopClosing::Run, //线程的主函数
+                                    mpLoopCloser);                //该函数的参数
 
-            // Set pointers between threads
-            //设置进程间的指针
-            mpTracker->SetLocalMapper(mpLocalMapper);
-            mpTracker->SetLoopClosing(mpLoopCloser);
+        // Set pointers between threads
+        //设置进程间的指针
+        mpTracker->SetLocalMapper(mpLocalMapper);
+        mpTracker->SetLoopClosing(mpLoopCloser);
 
-            mpLocalMapper->SetTracker(mpTracker);
-            mpLocalMapper->SetLoopCloser(mpLoopCloser);
+        mpLocalMapper->SetTracker(mpTracker);
+        mpLocalMapper->SetLoopCloser(mpLoopCloser);
 
-            mpLoopCloser->SetTracker(mpTracker);
-            mpLoopCloser->SetLocalMapper(mpLocalMapper);
-            // Initialize the Viewer thread and launch
-            if (bUseViewer)
-            {
-                //如果指定了，程序的运行过程中需要运行可视化部分
-                //新建viewer
-                mpViewer = new Viewer(this,             //又是这个
-                                      mpFrameDrawer,    //帧绘制器
-                                      mpMapDrawer,      //地图绘制器
-                                      mpTracker,        //追踪器
-                                      strSettingsFile); //配置文件的访问路径
-                //新建viewer线程
-                mptViewer = new thread(&Viewer::Run, mpViewer);
-                //给运动追踪器设置其查看器
-                mpTracker->SetViewer(mpViewer);
-            }
+        mpLoopCloser->SetTracker(mpTracker);
+        mpLoopCloser->SetLocalMapper(mpLocalMapper);
+        // Initialize the Viewer thread and launch
+        if (bUseViewer)
+        {
+            //如果指定了，程序的运行过程中需要运行可视化部分
+            //新建viewer
+            mpViewer = new Viewer(this,             //又是这个
+                                  mpFrameDrawer,    //帧绘制器
+                                  mpMapDrawer,      //地图绘制器
+                                  mpTracker,        //追踪器
+                                  strSettingsFile); //配置文件的访问路径
+            //新建viewer线程
+            mptViewer = new thread(&Viewer::Run, mpViewer);
+            //给运动追踪器设置其查看器
+            mpTracker->SetViewer(mpViewer);
         }
     }
 
@@ -667,7 +673,6 @@ namespace ORB_SLAM2
         boost::archive::binary_iarchive ia(in, boost::archive::no_header);
         ia >> mpMap;
         ia >> mpKeyFrameDatabase;
-
         mpKeyFrameDatabase->SetORBVocabulary(mpVocabulary);
 
         cout << "Mapfile loaded succesfully!" << std::endl;
@@ -706,5 +711,90 @@ namespace ORB_SLAM2
         oa << mpKeyFrameDatabase;
         cout << "Mapfile saved succesfully!" << std::endl;
         out.close();
+    }
+    void System::GetObservations(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timestamp, std::vector<pair<cv::KeyPoint, double>> &observations, std::vector<MapPoint *> &mapPoints)
+    {
+        //检查输入数据类型是否合法
+        if (mSensor != STEREO)
+        {
+            //不合法那就退出
+            cerr << "ERROR: you called TrackStereo but input sensor was not set to STEREO." << endl;
+            exit(-1);
+        }
+
+        //检查是否有运行模式的改变
+        // Check mode change
+        {
+            // TODO 锁住这个变量？防止其他的线程对它的更改？
+            unique_lock<mutex> lock(mMutexMode);
+            //如果激活定位模式
+            if (mbActivateLocalizationMode)
+            {
+                //调用局部建图器的请求停止函数
+                mpLocalMapper->RequestStop();
+
+                // Wait until Local Mapping has effectively stopped
+                while (!mpLocalMapper->isStopped())
+                {
+                    usleep(1000);
+                }
+                //运行到这里的时候，局部建图部分就真正地停止了
+                //告知追踪器，现在 只有追踪工作
+                mpTracker->InformOnlyTracking(true); // 定位时，只跟踪
+                //同时清除定位标记
+                mbActivateLocalizationMode = false; // 防止重复执行
+            }                                       //如果激活定位模式
+            if (mbDeactivateLocalizationMode)
+            {
+                //如果取消定位模式
+                //告知追踪器，现在地图构建部分也要开始工作了
+                mpTracker->InformOnlyTracking(false);
+                //局部建图器要开始工作呢
+                mpLocalMapper->Release();
+                //清楚标志
+                mbDeactivateLocalizationMode = false; // 防止重复执行
+            }                                         //如果取消定位模式
+        }                                             //检查是否有模式的改变
+
+        // Check reset，检查是否有复位的操作
+        {
+            //上锁
+            unique_lock<mutex> lock(mMutexReset);
+            //是否有复位请求？
+            if (mbReset)
+            {
+                //有，追踪器复位
+                mpTracker->Reset();
+                //清除标志
+                mbReset = false;
+            } //是否有复位请求
+        }     //检查是否有复位的操作
+
+        //用矩阵Tcw来保存估计的相机 位姿，运动追踪器的GrabImageStereo函数才是真正进行运动估计的函数
+        // cv::Mat Tcw = mpTracker->GrabImageStereo(imLeft, imRight, timestamp);
+        Frame currFrame = mpTracker->GetFrameWithAssociations(imLeft, imRight, timestamp);
+
+        //给运动追踪状态上锁
+        unique_lock<mutex> lock2(mMutexState);
+        //获取运动追踪状态
+        mTrackingState = mpTracker->mState;
+        //获取当前帧追踪到的地图点向量指针
+        mTrackedMapPoints = mpTracker->mCurrentFrame.mvpMapPoints;
+        //获取当前帧追踪到的关键帧特征点向量的指针
+        mTrackedKeyPointsUn = mpTracker->mCurrentFrame.mvKeysUn;
+        //返回获得的相机运动估计
+        // get the 3D points
+        observations.clear();
+        observations.reserve(currFrame.mvKeysUn.size());
+        mapPoints.clear();
+        mapPoints.reserve(currFrame.mvKeysUn.size());
+        for (int i = 0; i < (int)currFrame.mvKeysUn.size(); i++)
+        {
+            if (currFrame.mvpMapPoints[i] != nullptr)
+            {
+                observations.emplace_back(currFrame.mvKeysUn[i], currFrame.mvInvLevelSigma2[currFrame.mvKeysUn[i].octave]);
+                mapPoints.emplace_back(currFrame.mvpMapPoints[i]);
+            }
+        }
     }
 } // namespace ORB_SLAM

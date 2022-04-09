@@ -64,27 +64,28 @@ namespace ORB_SLAM2
 
     ///构造函数
     Tracking::Tracking(
-        System *pSys,                              //系统实例
-        ORBVocabulary *pVoc,                       // BOW字典
-        FrameDrawer *pFrameDrawer,                 //帧绘制器
-        MapDrawer *pMapDrawer,                     //地图点绘制器
-        Map *pMap,                                 //地图句柄
-        KeyFrameDatabase *pKFDB,                   //关键帧产生的词袋数据库
-        const string &strSettingPath,              //配置文件路径
-        const int sensor) :                        //传感器类型
-                            mState(NO_IMAGES_YET), //当前系统还没有准备好
-                            mSensor(sensor),
-                            mbOnlyTracking(false), //处于SLAM模式
-                            mbVO(false),           //当处于纯跟踪模式的时候，这个变量表示了当前跟踪状态的好坏
-                            mpORBVocabulary(pVoc),
-                            mpKeyFrameDB(pKFDB),
-                            mpInitializer(static_cast<Initializer *>(NULL)), //暂时给地图初始化器设置为空指针
-                            mpSystem(pSys),
-                            mpViewer(NULL), //注意可视化的查看器是可选的，因为ORB-SLAM2最后是被编译成为一个库，所以对方人拿过来用的时候也应该有权力说我不要可视化界面（何况可视化界面也要占用不少的CPU资源）
-                            mpFrameDrawer(pFrameDrawer),
-                            mpMapDrawer(pMapDrawer),
-                            mpMap(pMap),
-                            mnLastRelocFrameId(0) //恢复为0,没有进行这个过程的时候的默认值
+        System *pSys,                 //系统实例
+        ORBVocabulary *pVoc,          // BOW字典
+        FrameDrawer *pFrameDrawer,    //帧绘制器
+        MapDrawer *pMapDrawer,        //地图点绘制器
+        Map *pMap,                    //地图句柄
+        KeyFrameDatabase *pKFDB,      //关键帧产生的词袋数据库
+        const string &strSettingPath, //配置文件路径
+        const int sensor,
+        bool bReuseMap) :                        //传感器类型
+                          mState(NO_IMAGES_YET), //当前系统还没有准备好
+                          mSensor(sensor),
+                          mbOnlyTracking(false), //处于SLAM模式
+                          mbVO(false),           //当处于纯跟踪模式的时候，这个变量表示了当前跟踪状态的好坏
+                          mpORBVocabulary(pVoc),
+                          mpKeyFrameDB(pKFDB),
+                          mpInitializer(static_cast<Initializer *>(NULL)), //暂时给地图初始化器设置为空指针
+                          mpSystem(pSys),
+                          mpViewer(NULL), //注意可视化的查看器是可选的，因为ORB-SLAM2最后是被编译成为一个库，所以对方人拿过来用的时候也应该有权力说我不要可视化界面（何况可视化界面也要占用不少的CPU资源）
+                          mpFrameDrawer(pFrameDrawer),
+                          mpMapDrawer(pMapDrawer),
+                          mpMap(pMap),
+                          mnLastRelocFrameId(0) //恢复为0,没有进行这个过程的时候的默认值
     {
         // Load camera parameters from settings file
         // Step 1 从配置文件中加载相机参数
@@ -212,6 +213,12 @@ namespace ORB_SLAM2
                 mDepthMapFactor = 1;
             else
                 mDepthMapFactor = 1.0f / mDepthMapFactor;
+        }
+
+        // intialized as lost if use map
+        if (bReuseMap)
+        {
+            mState = LOST;
         }
     }
 
@@ -2325,6 +2332,63 @@ namespace ORB_SLAM2
     void Tracking::InformOnlyTracking(const bool &flag)
     {
         mbOnlyTracking = flag;
+    }
+
+    Frame Tracking::GetFrameWithAssociations(
+        const cv::Mat &imRectLeft,  //左侧图像
+        const cv::Mat &imRectRight, //右侧图像
+        const double &timestamp)    //时间戳
+    {
+        mImGray = imRectLeft;
+        cv::Mat imGrayRight = imRectRight;
+
+        // step 1 ：将RGB或RGBA图像转为灰度图像
+        if (mImGray.channels() == 3)
+        {
+            if (mbRGB)
+            {
+                cvtColor(mImGray, mImGray, CV_RGB2GRAY);
+                cvtColor(imGrayRight, imGrayRight, CV_RGB2GRAY);
+            }
+            else
+            {
+                cvtColor(mImGray, mImGray, CV_BGR2GRAY);
+                cvtColor(imGrayRight, imGrayRight, CV_BGR2GRAY);
+            }
+        }
+        // 这里考虑得十分周全,甚至连四通道的图像都考虑到了
+        else if (mImGray.channels() == 4)
+        {
+            if (mbRGB)
+            {
+                cvtColor(mImGray, mImGray, CV_RGBA2GRAY);
+                cvtColor(imGrayRight, imGrayRight, CV_RGBA2GRAY);
+            }
+            else
+            {
+                cvtColor(mImGray, mImGray, CV_BGRA2GRAY);
+                cvtColor(imGrayRight, imGrayRight, CV_BGRA2GRAY);
+            }
+        }
+
+        // Step 2 ：构造Frame
+        mCurrentFrame = Frame(
+            mImGray,             //左目图像
+            imGrayRight,         //右目图像
+            timestamp,           //时间戳
+            mpORBextractorLeft,  //左目特征提取器
+            mpORBextractorRight, //右目特征提取器
+            mpORBVocabulary,     //字典
+            mK,                  //内参矩阵
+            mDistCoef,           //去畸变参数
+            mbf,                 //基线长度
+            mThDepth);           //远点,近点的区分阈值
+
+        // Step 3 ：跟踪
+        Track();
+
+        //返回位姿
+        return mCurrentFrame;
     }
 
 } // namespace ORB_SLAM

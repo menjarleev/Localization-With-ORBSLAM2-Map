@@ -19,6 +19,7 @@
  */
 
 #include <iostream>
+
 #include <algorithm>
 #include <fstream>
 #include <iomanip>
@@ -27,7 +28,7 @@
 #include <opencv2/core/core.hpp>
 #include <unistd.h>
 
-#include <System.h>
+#include "System.h"
 
 using namespace std;
 
@@ -54,7 +55,7 @@ int main(int argc, char **argv)
     const int nImages = vstrImageLeft.size();
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    ORB_SLAM2::System SLAM(argv[1], argv[2], ORB_SLAM2::System::STEREO, true);
+    ORB_SLAM2::System SLAM(argv[1], argv[2], ORB_SLAM2::System::STEREO, false);
 
     // Vector for tracking time statistics
     vector<float> vTimesTrack;
@@ -85,7 +86,7 @@ int main(int argc, char **argv)
             return 1;
         }
 
-#ifdef COMPILEDWITHC11
+#ifdef COMPILEDWITHC17
         std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
 #else
         std::chrono::monotonic_clock::time_point t1 = std::chrono::monotonic_clock::now();
@@ -94,7 +95,7 @@ int main(int argc, char **argv)
         // Pass the images to the SLAM system
         SLAM.TrackStereo(imLeft, imRight, tframe);
 
-#ifdef COMPILEDWITHC11
+#ifdef COMPILEDWITHC17
         std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
 #else
         std::chrono::monotonic_clock::time_point t2 = std::chrono::monotonic_clock::now();

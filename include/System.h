@@ -157,6 +157,8 @@ namespace ORB_SLAM2
         std::vector<MapPoint *> GetTrackedMapPoints();
         std::vector<cv::KeyPoint> GetTrackedKeyPointsUn();
 
+        void GetObservations(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timestamp, std::vector<pair<cv::KeyPoint, double>> &observations, std::vector<MapPoint *> &mapPoints);
+
     private:
         //注意变量命名方式，类的变量有前缀m，如果这个变量是指针类型还要多加个前缀p，
         //如果是进程那么加个前缀t

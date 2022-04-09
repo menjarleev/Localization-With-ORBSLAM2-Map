@@ -228,9 +228,9 @@ namespace ORB_SLAM2
     public:
         long unsigned int mnId; ///< Global ID for MapPoint
         static long unsigned int nNextId;
-        const long int mnFirstKFid; ///< 创建该MapPoint的关键帧ID
+        long int mnFirstKFid; ///< 创建该MapPoint的关键帧ID
         //呐,如果是从帧中创建的话,会将普通帧的id存放于这里
-        const long int mnFirstFrame; ///< 创建该MapPoint的帧ID（即每一关键帧有一个帧ID）
+        long int mnFirstFrame; ///< 创建该MapPoint的帧ID（即每一关键帧有一个帧ID）
 
         // 被观测到的相机数目，单目+1，双目或RGB-D则+2
         int nObs;
@@ -319,6 +319,10 @@ namespace ORB_SLAM2
         std::mutex mMutexPos;
         ///对当前地图点的特征信息进行操作的时候的互斥量
         std::mutex mMutexFeatures;
+
+    public:
+        //  for serialization
+        MapPoint();
 
     private:
         friend class boost::serialization::access;

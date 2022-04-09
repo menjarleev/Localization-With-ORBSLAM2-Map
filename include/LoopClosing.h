@@ -237,7 +237,7 @@ namespace ORB_SLAM2
         bool mbFixScale;
 
         /// 已经进行了的全局BA次数(包含中途被打断的)
-        bool mnFullBAIdx;
+        int mnFullBAIdx;
     };
 
 } // namespace ORB_SLAM
