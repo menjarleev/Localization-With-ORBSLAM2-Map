@@ -107,7 +107,7 @@ int main(int argc, char **argv)
         }
 
         // step 4.3 开始计时
-#ifdef COMPILEDWITHC17
+#ifdef COMPILEDWITHC11
         std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
 #else
         std::chrono::monotonic_clock::time_point t1 = std::chrono::monotonic_clock::now();
@@ -119,7 +119,7 @@ int main(int argc, char **argv)
 
         // step 4.5 追踪完成,停止当前帧的图像计时, 并计算追踪耗时
 
-#ifdef COMPILEDWITHC17
+#ifdef COMPILEDWITHC11
         std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
 #else
         std::chrono::monotonic_clock::time_point t2 = std::chrono::monotonic_clock::now();

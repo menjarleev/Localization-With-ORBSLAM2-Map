@@ -22,9 +22,8 @@
                 }
             ],
             "stopAtEntry": false,
-            "cwd": "${fileDirname}",
+            "cwd": "${workspaceFolder}/extension/",
             "externalConsole": false,
-            "debugStdLib": true,
             "MIMode": "gdb",
             "setupCommands": [
                 {
@@ -50,7 +49,7 @@
                 "/data/dataset/sequences/04"
             ],
             "stopAtEntry": false,
-            "cwd": "${fileDirname}",
+            "cwd": "${workspaceFolder}/extension/",
             "environment": [
                 {
                     "name": "PATH",

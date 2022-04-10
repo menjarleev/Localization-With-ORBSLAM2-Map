@@ -57,7 +57,8 @@ namespace ORB_SLAM2
                                     mpReplaced(static_cast<MapPoint *>(NULL)), //替换掉当前地图点的点
                                     mfMinDistance(0),                          //当前地图点在某帧下,可信赖的被找到时其到关键帧光心距离的下界
                                     mfMaxDistance(0),                          //上界
-                                    mpMap(pMap)                                //从属地图
+                                    mpMap(pMap),                               //从属地图
+                                    mbTrackInView(false)
     {
         Pos.copyTo(mWorldPos);
         //平均观测方向初始化为0
@@ -80,7 +81,7 @@ namespace ORB_SLAM2
     MapPoint::MapPoint(const cv::Mat &Pos, Map *pMap, Frame *pFrame, const int &idxF) : mnFirstKFid(-1), mnFirstFrame(pFrame->mnId), nObs(0), mnTrackReferenceForFrame(0), mnLastFrameSeen(0),
                                                                                         mnBALocalForKF(0), mnFuseCandidateForKF(0), mnLoopPointForKF(0), mnCorrectedByKF(0),
                                                                                         mnCorrectedReference(0), mnBAGlobalForKF(0), mpRefKF(static_cast<KeyFrame *>(NULL)), mnVisible(1),
-                                                                                        mnFound(1), mbBad(false), mpReplaced(NULL), mpMap(pMap)
+                                                                                        mnFound(1), mbBad(false), mpReplaced(NULL), mpMap(pMap), mbTrackInView(false)
     {
         Pos.copyTo(mWorldPos);
         cv::Mat Ow = pFrame->GetCameraCenter();
@@ -618,7 +619,7 @@ namespace ORB_SLAM2
     MapPoint::MapPoint() : nObs(0), mnTrackReferenceForFrame(0),
                            mnLastFrameSeen(0), mnBALocalForKF(0), mnFuseCandidateForKF(0), mnLoopPointForKF(0), mnCorrectedByKF(0),
                            mnCorrectedReference(0), mnBAGlobalForKF(0), mnVisible(1), mnFound(1), mbBad(false),
-                           mpReplaced(static_cast<MapPoint *>(NULL)), mfMinDistance(0), mfMaxDistance(0)
+                           mpReplaced(static_cast<MapPoint *>(NULL)), mfMinDistance(0), mfMaxDistance(0), mbTrackInView(false)
     {
     }
 

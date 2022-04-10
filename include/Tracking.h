@@ -153,7 +153,7 @@ namespace ORB_SLAM2
          */
         void InformOnlyTracking(const bool &flag);
 
-        Frame GetFrameWithAssociations(const cv::Mat &imRectLeft, const cv::Mat &imRectRight, const double &timestamp);
+        Frame GetFrameForObservation(const cv::Mat &imRectLeft, const cv::Mat &imRectRight, const double &timestamp);
 
     public:
         // Tracking states

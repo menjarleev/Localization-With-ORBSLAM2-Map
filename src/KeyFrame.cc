@@ -904,7 +904,7 @@ namespace ORB_SLAM2
                            mbf(0.0), mb(0.0), mThDepth(0.0), N(0), mnScaleLevels(0), mfScaleFactor(0),
                            mfLogScaleFactor(0.0),
                            mnMinX(0), mnMinY(0), mnMaxX(0),
-                           mnMaxY(0)
+                           mnMaxY(0), mbNotErase(false), mbToBeErased(false), mbBad(false)
     {
     }
 

@@ -70,6 +70,12 @@ namespace ORB_SLAM2
         int save_map;
         int load_map;
 
+        // Tracker. It receives a frame and computes the associated camera pose.
+        // It also decides when to insert a new keyframe, create some new MapPoints and
+        // performs relocalization if tracking fails.
+        // 追踪器，除了进行运动追踪外还要负责创建关键帧、创建新地图点和进行重定位的工作。详细信息还得看相关文件
+        Tracking *mpTracker;
+
     public:
         // Initialize the SLAM system. It launches the Local Mapping, Loop Closing and Viewer threads.
         //构造函数，用来初始化整个系统。
@@ -178,12 +184,6 @@ namespace ORB_SLAM2
         //指向地图（数据库）的指针
         // Map structure that stores the pointers to all KeyFrames and MapPoints.
         Map *mpMap;
-
-        // Tracker. It receives a frame and computes the associated camera pose.
-        // It also decides when to insert a new keyframe, create some new MapPoints and
-        // performs relocalization if tracking fails.
-        // 追踪器，除了进行运动追踪外还要负责创建关键帧、创建新地图点和进行重定位的工作。详细信息还得看相关文件
-        Tracking *mpTracker;
 
         // Local Mapper. It manages the local map and performs local bundle adjustment.
         //局部建图器。局部BA由它进行。

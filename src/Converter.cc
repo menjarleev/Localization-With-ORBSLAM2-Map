@@ -24,9 +24,9 @@
  * @brief ORB-SLAM2中一些常用的转换的实现
  * @version 0.1
  * @date 2019-01-03
- * 
+ *
  * @copyright Copyright (c) 2019
- * 
+ *
  */
 
 
@@ -47,7 +47,7 @@ std::vector<cv::Mat> Converter::toDescriptorVector(const cv::Mat &Descriptors)
     for (int j=0;j<Descriptors.rows;j++)
 		//从描述子这个矩阵中抽取出来存到向量中
         vDesc.push_back(Descriptors.row(j));
-	
+
 	//返回转换结果
     return vDesc;
 }
@@ -106,7 +106,7 @@ cv::Mat Converter::toCvMat(const Eigen::Matrix<double,4,4> &m)
     return cvMat.clone();
 }
 
-//Eigen::Matrix3d -> cv::Mat 
+//Eigen::Matrix3d -> cv::Mat
 cv::Mat Converter::toCvMat(const Eigen::Matrix3d &m)
 {
 	//首先定义存储计算结果的变量

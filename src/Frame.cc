@@ -99,7 +99,6 @@ namespace ORB_SLAM2
             //这里说的是给新的帧设置Pose
             SetPose(frame.mTcw);
     }
-
     /**
      * @brief 为双目相机准备的构造函数
      *
@@ -1072,13 +1071,16 @@ namespace ORB_SLAM2
         // 块匹配相似度阈值判断，归一化sad最小，并不代表就一定是匹配的，比如光照变化、弱纹理、无纹理等同样会造成误匹配
         // 误匹配判断条件  norm_sad > 1.5 * 1.4 * median
         sort(vDistIdx.begin(), vDistIdx.end());
+        cout << vDistIdx.size() << endl;
         const float median = vDistIdx[vDistIdx.size() / 2].first;
         const float thDist = 1.5f * 1.4f * median;
 
         for (int i = vDistIdx.size() - 1; i >= 0; i--)
         {
             if (vDistIdx[i].first < thDist)
+            {
                 break;
+            }
             else
             {
                 // 误匹配点置为-1，和初始化时保持一直，作为error code
@@ -1145,8 +1147,20 @@ namespace ORB_SLAM2
 
         /** <li> 获取这个特征点的深度（这里的深度可能是通过双目视差得出的，也可能是直接通过深度图像的出来的） </li> */
         const float z = mvDepth[i];
-        /** <li> 判断这个深度是否合法 </li> <ul> */
-        //（其实这里也可以不再进行判断，因为在计算或者生成这个深度的时候都是经过检查了的_不行,RGBD的不是）
+        cv::Mat x3Dc = GetPoseInCameraFrame(i, z);
+        if (x3Dc.empty())
+        {
+            return x3Dc;
+        }
+        else
+        {
+            return mRwc * x3Dc + mOw;
+        }
+    }
+
+    cv::Mat Frame::GetPoseInCameraFrame(const int &i, const float z)
+    {
+
         if (z > 0)
         {
             /** <li> 如果合法,就利用<b></b>矫正后的特征点的坐标 Frame::mvKeysUn 和相机的内参数,通过反投影和位姿变换得到空间点的坐标 </li> */
@@ -1159,13 +1173,10 @@ namespace ORB_SLAM2
             //生成三维点（在当前相机坐标系下）
             cv::Mat x3Dc = (cv::Mat_<float>(3, 1) << x, y, z);
             //然后计算这个点在世界坐标系下的坐标，这里是对的，但是公式还是要斟酌一下。首先变换成在没有旋转的相机坐标系下，最后考虑相机坐标系相对于世界坐标系的平移
-            return mRwc * x3Dc + mOw;
+            return x3Dc;
         }
         else
-            /** <li> 如果深度值不合法，那么就返回一个空矩阵,表示计算失败 </li> */
             return cv::Mat();
-        /** </ul> */
-        /** </ul> */
     }
 
 } // namespace ORB_SLAM

@@ -2334,10 +2334,10 @@ namespace ORB_SLAM2
         mbOnlyTracking = flag;
     }
 
-    Frame Tracking::GetFrameWithAssociations(
+    Frame Tracking::GetFrameForObservation(
         const cv::Mat &imRectLeft,  //左侧图像
         const cv::Mat &imRectRight, //右侧图像
-        const double &timestamp)    //时间戳
+        const double &timestamp)
     {
         mImGray = imRectLeft;
         cv::Mat imGrayRight = imRectRight;
@@ -2372,23 +2372,17 @@ namespace ORB_SLAM2
         }
 
         // Step 2 ：构造Frame
-        mCurrentFrame = Frame(
-            mImGray,             //左目图像
-            imGrayRight,         //右目图像
-            timestamp,           //时间戳
-            mpORBextractorLeft,  //左目特征提取器
-            mpORBextractorRight, //右目特征提取器
-            mpORBVocabulary,     //字典
-            mK,                  //内参矩阵
-            mDistCoef,           //去畸变参数
-            mbf,                 //基线长度
-            mThDepth);           //远点,近点的区分阈值
-
-        // Step 3 ：跟踪
-        Track();
-
-        //返回位姿
-        return mCurrentFrame;
+        Frame currentFrame = Frame(mImGray,             //左目图像
+                                   imGrayRight,         //右目图像
+                                   timestamp,           //时间戳
+                                   mpORBextractorLeft,  //左目特征提取器
+                                   mpORBextractorRight, //右目特征提取器
+                                   mpORBVocabulary,     //字典
+                                   mK,                  //内参矩阵
+                                   mDistCoef,           //去畸变参数
+                                   mbf,                 //基线长度
+                                   mThDepth);           //远点,近点的区分阈值
+        return currentFrame;
     }
 
 } // namespace ORB_SLAM

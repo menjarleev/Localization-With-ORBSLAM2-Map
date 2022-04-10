@@ -268,6 +268,8 @@ namespace ORB_SLAM2
          */
         cv::Mat UnprojectStereo(const int &i);
 
+        cv::Mat GetPoseInCameraFrame(const int &i, const float z);
+
     public:
         // Vocabulary used for relocalization.
         ///用于重定位的ORB特征字典

@@ -170,7 +170,7 @@ int main(int argc, char **argv)
 
         double tframe = vTimeStamp[ni];
 
-#ifdef COMPILEDWITHC17
+#ifdef COMPILEDWITHC11
         std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
 #else
         std::chrono::monotonic_clock::time_point t1 = std::chrono::monotonic_clock::now();
@@ -180,7 +180,7 @@ int main(int argc, char **argv)
         //将处理后的图像送入到系统中
         SLAM.TrackStereo(imLeftRect, imRightRect, tframe);
 
-#ifdef COMPILEDWITHC17
+#ifdef COMPILEDWITHC11
         std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
 #else
         std::chrono::monotonic_clock::time_point t2 = std::chrono::monotonic_clock::now();

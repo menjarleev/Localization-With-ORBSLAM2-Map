@@ -105,23 +105,19 @@ namespace ORB_SLAM2
 
         // Create the Map
         mpMap = new Map();
+        bReuseMap = false;
 
         if (load_map && !mapfile.empty() && LoadMap(mapfile))
         {
             bReuseMap = true;
-            {
-                unique_lock<mutex> mutex_mode_lock(mMutexMode);
-                mbActivateLocalizationMode = true;
-                mbDeactivateLocalizationMode = false;
-            }
+            // {
+            //     unique_lock<mutex> mutex_mode_lock(mMutexMode);
+            //     mbActivateLocalizationMode = true;
+            //     mbDeactivateLocalizationMode = false;
+            // }
         }
-        else
-        {
-            // Create Drawers. These are used by the Viewer
-            //这里的帧绘制器和地图绘制器将会被可视化的Viewer所使用
-            mpFrameDrawer = new FrameDrawer(mpMap, bReuseMap);
-            mpMapDrawer = new MapDrawer(mpMap, strSettingsFile);
-        }
+        mpFrameDrawer = new FrameDrawer(mpMap, bReuseMap);
+        mpMapDrawer = new MapDrawer(mpMap, strSettingsFile);
         //在本主进程中初始化追踪线程
         // Initialize the Tracking thread
         //(it will live in the main thread of execution, the one that called this constructor)
@@ -689,6 +685,7 @@ namespace ORB_SLAM2
         Frame::nNextId = mnFrameId;
         cout << " ...done" << endl;
         in.close();
+        cout << "map keypoint size " << mpMap->MapPointsInMap() << endl;
         return true;
     }
 
@@ -711,90 +708,5 @@ namespace ORB_SLAM2
         oa << mpKeyFrameDatabase;
         cout << "Mapfile saved succesfully!" << std::endl;
         out.close();
-    }
-    void System::GetObservations(const cv::Mat &imLeft, const cv::Mat &imRight, const double &timestamp, std::vector<pair<cv::KeyPoint, double>> &observations, std::vector<MapPoint *> &mapPoints)
-    {
-        //检查输入数据类型是否合法
-        if (mSensor != STEREO)
-        {
-            //不合法那就退出
-            cerr << "ERROR: you called TrackStereo but input sensor was not set to STEREO." << endl;
-            exit(-1);
-        }
-
-        //检查是否有运行模式的改变
-        // Check mode change
-        {
-            // TODO 锁住这个变量？防止其他的线程对它的更改？
-            unique_lock<mutex> lock(mMutexMode);
-            //如果激活定位模式
-            if (mbActivateLocalizationMode)
-            {
-                //调用局部建图器的请求停止函数
-                mpLocalMapper->RequestStop();
-
-                // Wait until Local Mapping has effectively stopped
-                while (!mpLocalMapper->isStopped())
-                {
-                    usleep(1000);
-                }
-                //运行到这里的时候，局部建图部分就真正地停止了
-                //告知追踪器，现在 只有追踪工作
-                mpTracker->InformOnlyTracking(true); // 定位时，只跟踪
-                //同时清除定位标记
-                mbActivateLocalizationMode = false; // 防止重复执行
-            }                                       //如果激活定位模式
-            if (mbDeactivateLocalizationMode)
-            {
-                //如果取消定位模式
-                //告知追踪器，现在地图构建部分也要开始工作了
-                mpTracker->InformOnlyTracking(false);
-                //局部建图器要开始工作呢
-                mpLocalMapper->Release();
-                //清楚标志
-                mbDeactivateLocalizationMode = false; // 防止重复执行
-            }                                         //如果取消定位模式
-        }                                             //检查是否有模式的改变
-
-        // Check reset，检查是否有复位的操作
-        {
-            //上锁
-            unique_lock<mutex> lock(mMutexReset);
-            //是否有复位请求？
-            if (mbReset)
-            {
-                //有，追踪器复位
-                mpTracker->Reset();
-                //清除标志
-                mbReset = false;
-            } //是否有复位请求
-        }     //检查是否有复位的操作
-
-        //用矩阵Tcw来保存估计的相机 位姿，运动追踪器的GrabImageStereo函数才是真正进行运动估计的函数
-        // cv::Mat Tcw = mpTracker->GrabImageStereo(imLeft, imRight, timestamp);
-        Frame currFrame = mpTracker->GetFrameWithAssociations(imLeft, imRight, timestamp);
-
-        //给运动追踪状态上锁
-        unique_lock<mutex> lock2(mMutexState);
-        //获取运动追踪状态
-        mTrackingState = mpTracker->mState;
-        //获取当前帧追踪到的地图点向量指针
-        mTrackedMapPoints = mpTracker->mCurrentFrame.mvpMapPoints;
-        //获取当前帧追踪到的关键帧特征点向量的指针
-        mTrackedKeyPointsUn = mpTracker->mCurrentFrame.mvKeysUn;
-        //返回获得的相机运动估计
-        // get the 3D points
-        observations.clear();
-        observations.reserve(currFrame.mvKeysUn.size());
-        mapPoints.clear();
-        mapPoints.reserve(currFrame.mvKeysUn.size());
-        for (int i = 0; i < (int)currFrame.mvKeysUn.size(); i++)
-        {
-            if (currFrame.mvpMapPoints[i] != nullptr)
-            {
-                observations.emplace_back(currFrame.mvKeysUn[i], currFrame.mvInvLevelSigma2[currFrame.mvKeysUn[i].octave]);
-                mapPoints.emplace_back(currFrame.mvpMapPoints[i]);
-            }
-        }
     }
 } // namespace ORB_SLAM

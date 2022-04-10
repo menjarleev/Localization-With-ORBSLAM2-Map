@@ -126,6 +126,10 @@
 		"forward_list": "cpp",
 		"cfenv": "cpp",
 		"core": "cpp",
-		"geometry": "cpp"
+		"geometry": "cpp",
+		"csignal": "cpp",
+		"codecvt": "cpp",
+		"future": "cpp",
+		"valarray": "cpp"
 	}
 }

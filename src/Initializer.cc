@@ -1354,6 +1354,7 @@ namespace ORB_SLAM2
      * @param[in] P2                投影矩阵P2
      * @param[in & out] x3D         计算的三维点
      */
+    // TODO use
     void Initializer::Triangulate(
         const cv::KeyPoint &kp1, //特征点, in reference frame
         const cv::KeyPoint &kp2, //特征点, in current frame
@@ -1509,6 +1510,7 @@ namespace ORB_SLAM2
      * @param[in & out] parallax                        计算出来的比较大的视差角（注意不是最大，具体看后面代码）
      * @return int
      */
+    // TODO: modify this
     int Initializer::CheckRT(const cv::Mat &R, const cv::Mat &t, const vector<cv::KeyPoint> &vKeys1, const vector<cv::KeyPoint> &vKeys2,
                              const vector<Match> &vMatches12, vector<bool> &vbMatchesInliers,
                              const cv::Mat &K, vector<cv::Point3f> &vP3D, float th2, vector<bool> &vbGood, float &parallax)

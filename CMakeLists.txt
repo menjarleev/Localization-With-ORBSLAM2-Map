@@ -9,29 +9,29 @@ MESSAGE("Build type: " ${CMAKE_BUILD_TYPE})
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall  -O0 -march=native ")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall   -O0 -march=native")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
-add_definitions(-DCOMPILEDWITHC17)
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+# add_definitions(-DCOMPILEDWITHC14)
 
 
-# # Check C++11 or C++0x support
-# include(CheckCXXCompilerFlag)
-# CHECK_CXX_COMPILER_FLAG("-std=c++17" COMPILER_SUPPORTS_CXX11)
-# CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-# if(COMPILER_SUPPORTS_CXX11)
-#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-#    add_definitions(-DCOMPILEDWITHC17)
-#    message(STATUS "Using flag -std=c++11.")
-# elseif(COMPILER_SUPPORTS_CXX0X)
-#    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
-#    add_definitions(-DCOMPILEDWITHC0X)
-#    message(STATUS "Using flag -std=c++0x.")
-# else()
-#    message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
-# endif()
+# Check C++11 or C++0x support
+include(CheckCXXCompilerFlag)
+CHECK_CXX_COMPILER_FLAG("-std=c++14" COMPILER_SUPPORTS_CXX14)
+CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
+if(COMPILER_SUPPORTS_CXX14)
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
+   add_definitions(-DCOMPILEDWITHC14)
+   message(STATUS "Using flag -std=c++14.")
+elseif(COMPILER_SUPPORTS_CXX0X)
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+   add_definitions(-DCOMPILEDWITHC0X)
+   message(STATUS "Using flag -std=c++0x.")
+else()
+   message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler.")
+endif()
 
 
-LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules)
-
+LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules )
+LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/cmake_modules )
 find_library(BOOST_SERIALIZATION boost_serialization)
 if (NOT BOOST_SERIALIZATION)
     message(FATAL_ERROR "Can't find libboost_serialization")
@@ -45,21 +45,23 @@ if(NOT OpenCV_FOUND)
    endif()
 endif()
 
+set(G2O_ROOT /usr/local/include/g2o)
 
 SET(Sophus_INCLUDE_DIR "usr/local/include/sophus")
-find_package(Eigen3 REQUIRED)
+find_package(Eigen3 3.3.2 REQUIRED)
 find_package(Pangolin REQUIRED)
 find_package(FMT REQUIRED)
+find_package(G2O REQUIRED)
 
 include_directories(
 ${PROJECT_SOURCE_DIR}
-${PROJECT_SOURCE_DIR}/include
 ${PROJECT_SOURCE_DIR}/extension/include
+${PROJECT_SOURCE_DIR}/include
 ${EIGEN3_INCLUDE_DIR}
 ${Pangolin_INCLUDE_DIRS}
 ${Sophus_INCLUDE_DIR}
+${G2O_INCLUDE_DIRS}
 ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/DBoW2
-${PROJECT_SOURCE_DIR}/Thirdparty/g2o/g2o/core
 )
 
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib)
@@ -85,6 +87,11 @@ src/Sim3Solver.cc
 src/Initializer.cc
 src/Viewer.cc
 extension/src/ParticleFilter.cc
+extension/src/MotionModel.cc
+extension/src/ObservationModel.cc
+extension/src/KeyPointDecorator.cc
+extension/src/OctFeatMap.cc
+extension/src/FrameDecorator.cc
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -93,7 +100,7 @@ ${EIGEN3_LIBS}
 ${BOOST_SERIALIZATION}
 ${Pangolin_LIBRARIES}
 ${PROJECT_SOURCE_DIR}/Thirdparty/DBoW2/lib/libDBoW2.so
-${PROJECT_SOURCE_DIR}/Thirdparty/g2o/lib/libg2o.so
+${G2O_LIBS}
 fmt::fmt
 )
 
