@@ -24,7 +24,7 @@ doc/
 *~
 lib/
 */html/
-**/**/*.bin
+**/**/map*.bin
 **/**/pose_*.txt
 **/**/.vscode
 **/**/mapsaver
