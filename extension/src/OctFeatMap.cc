@@ -1,30 +1,37 @@
 #include "OctFeatMap.hpp"
 #include <vector>
+#include "Converter.h"
 namespace PF
 {
-    OctFeatMap::OctFeatMap(std::set<MapPoint *> sMapPoints) : mapPoints(sMapPoints.begin(), sMapPoints.end()), octree(mapPoints), index(3, octree, {10})
+    OctFeatMap::OctFeatMap(std::vector<MapPoint *> sMapPoints) : mapPoints(sMapPoints), octree(mapPoints), index(3, octree, {10})
     {
     }
 
-    bool OctFeatMap::FindMatch(KeyPointDecorator &kp, Particle &particle, double const radius)
+    bool OctFeatMap::FindMatch(KeyPointDecorator &kp, Particle &particle, double const searchRange)
     {
         // find keypoints in the map that is within radius
         const cv::Mat pose = kp.x3Dc;
-        double queryPoint[3] = {pose.at<double>(0), pose.at<double>(1), pose.at<double>(2)};
-        std::vector<std::pair<size_t, double>> indiciesDists;
-        nanoflann::RadiusResultSet<double, size_t> resultSet(radius, indiciesDists);
-        index.findNeighbors(resultSet, queryPoint, nanoflann::SearchParams());
+        // get the rotation and transformation matrix for current particle hypothesis
+        cv::Mat Tcw_hat = ORB_SLAM2::Converter::toCvMat(particle.pose);
+        cv::Mat R = Tcw_hat.rowRange(0, 3).colRange(0, 3);
+        cv::Mat t = Tcw_hat.rowRange(0, 3).col(3);
+        cv::Mat T_feat_hat = R * pose + t;
+        double queryPoint[3] = {T_feat_hat.at<float>(0), T_feat_hat.at<float>(1), T_feat_hat.at<float>(2)};
+        int num_results = (int)searchRange;
+        std::vector<uint32_t> ret_index(num_results);
+        std::vector<double> out_dist_sqr(num_results);
+        // nanoflann::RadiusResultSet<double, size_t> resultSet(radius, indiciesDists);
+        // nanoflann::KNNResultSet<double> resultSet(int(searchRange));
+        num_results = index.knnSearch(&queryPoint[0], num_results, &ret_index[0], &out_dist_sqr[0]);
+        ret_index.resize(num_results);
+        out_dist_sqr.resize(num_results);
 
-        if (indiciesDists.empty())
-        {
-            return false;
-        }
-        int minDist1 = TH_DIST;
+        int minDist1 = TH_DIST_LOW;
         int bestIdx = -1;
-        int minDist2 = TH_DIST;
-        for (int i = 0; i < indiciesDists.size(); i++)
+        int minDist2 = TH_DIST_LOW;
+        for (int i = 0; i < num_results; i++)
         {
-            int idx = indiciesDists[i].first;
+            int idx = ret_index[i];
             MapPoint *reference = mapPoints[idx];
             int tmpDist = DescriptorDistance(reference->GetDescriptor(), kp.descriptor);
             if (tmpDist < minDist1)
@@ -38,7 +45,7 @@ namespace PF
                 minDist2 = tmpDist;
             }
         }
-        if (minDist1 == TH_DIST || minDist2 == TH_DIST)
+        if (minDist1 == TH_DIST_LOW)
         {
             return false;
         }
@@ -51,6 +58,7 @@ namespace PF
                 kp.matched[particleIdx] = bestIdx;
                 kp.numMatch++;
                 kp.matchedMapPoints[particleIdx] = mapPoints[bestIdx];
+                return true;
             }
             else
             {

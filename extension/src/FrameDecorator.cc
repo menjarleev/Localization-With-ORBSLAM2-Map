@@ -1,31 +1,31 @@
 #include "FrameDecorator.hpp"
 namespace PF
 {
-    FrameDecorator::FrameDecorator(Frame &frame) : frame(frame)
+    FrameDecorator::FrameDecorator(Frame &frame, int height, int width) : frame(frame)
     {
         keyPoints.reserve(frame.mvKeysUn.size());
         for (int i = 0; i < frame.mvKeysUn.size(); i++)
         {
             cv::Mat featPoseInCameraFrame_i = frame.GetPoseInCameraFrame(i, frame.mvDepth[i]);
             // create covariance based on scale
-            double sigma2 = frame.mvLevelSigma2[frame.mvKeysUn[i].octave];
-            Eigen::Matrix2d cov;
-            cov << sigma2, 0, 0, sigma2;
+            double sigma2 = frame.mvLevelSigma2[frame.mvKeysUn[i].octave] * (height * height + width * width);
             const cv::Mat &descriptor = frame.mDescriptors.row(i);
-            keyPoints.emplace_back(descriptor, featPoseInCameraFrame_i, frame.mvKeysUn[i], cov);
+            keyPoints.emplace_back(descriptor, featPoseInCameraFrame_i, frame.mvKeysUn[i], sigma2);
         }
     }
 
-    FrameDecorator::FrameDecorator(Frame frame) : frame(frame)
+    FrameDecorator::FrameDecorator(Frame frame, int height, int width) : frame(frame)
     {
         keyPoints.reserve(frame.mvKeysUn.size());
         for (int i = 0; i < frame.mvKeysUn.size(); i++)
         {
-            cv::Mat featPoseInCameraFrame_i = frame.GetPoseInCameraFrame(i, frame.mvDepth[i]);
-            // create covariance based on scale
-            double sigma2 = frame.mvLevelSigma2[frame.mvKeysUn[i].octave];
-            const cv::Mat &descriptor = frame.mDescriptors.row(i);
-            keyPoints.emplace_back(descriptor, featPoseInCameraFrame_i, frame.mvKeysUn[i], sigma2);
+            if(frame.mvDepth[i] != -1){
+                cv::Mat featPoseInCameraFrame_i = frame.GetPoseInCameraFrame(i, frame.mvDepth[i]);
+                // create covariance based on scale
+                double sigma2 = frame.mvLevelSigma2[frame.mvKeysUn[i].octave] * (height * height + width * width);
+                const cv::Mat &descriptor = frame.mDescriptors.row(i).clone();
+                keyPoints.emplace_back(descriptor, featPoseInCameraFrame_i, frame.mvKeysUn[i], sigma2);
+            }
         }
     }
 

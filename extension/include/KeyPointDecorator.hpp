@@ -14,16 +14,16 @@ namespace PF
     {
     public:
         int numMatch;
-        const cv::Mat &descriptor;
+        const cv::Mat descriptor;
         const cv::Mat x3Dc;
-        const cv::KeyPoint &data;
+        const cv::KeyPoint data;
         const double sigma;
         std::vector<bool> matched;
         std::vector<MapPoint *> matchedMapPoints;
         std::vector<double> reprojectionErrors;
         double weight;
         double maxReprojectionError;
-        KeyPointDecorator(const cv::Mat &descriptor, cv::Mat x3Dc, cv::KeyPoint &data, double cov);
+        KeyPointDecorator(const cv::Mat &descriptor, const cv::Mat &x3Dc, cv::KeyPoint data, double cov);
         void SetWeight(double w);
     };
 

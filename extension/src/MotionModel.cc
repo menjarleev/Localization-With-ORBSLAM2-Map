@@ -5,12 +5,12 @@
 #include <sophus/se3.hpp>
 #include "Utils.hpp"
 
+extern int NParticle;
+
 using namespace Sophus;
 using namespace std;
 namespace PF
 {
-    int MotionModel::motionIdx = 0;
-
     MotionModel::MotionModel(std::vector<double> alpha)
     {
         for (int i = 0; i < 6; i++)
@@ -36,13 +36,15 @@ namespace PF
                     ss >> R_T[i];
                 }
                 m << R_T[0], R_T[1], R_T[2], R_T[3], R_T[4], R_T[5], R_T[6], R_T[7], R_T[8], R_T[9], R_T[10], R_T[11], 0, 0, 0, 1;
+                // normalize  matrix
+                m.block<3, 3>(0, 0) = Eigen::Quaterniond(m.block<3, 3>(0, 0)).normalized().toRotationMatrix();
                 // cout << SE3_R.matrix() << endl;
                 Tcl.emplace_back(m);
             }
         }
         fSE3.close();
     }
-    void MotionModel::SampleMotion(std::vector<Particle> &particles, double timeElapse)
+    void MotionModel::SampleMotion(std::vector<Particle> &particles, double timeElapse, int motionIdx)
     {
         // cholesky decomposition of motion noise
         SE3d SE3_Tcl = SE3d(Tcl[motionIdx]);
@@ -65,11 +67,6 @@ namespace PF
 
     Matrix4d MotionModel::GetInitPose()
     {
-        assert(motionIdx == 0);
-        return Tcl[motionIdx++];
-    }
-    bool MotionModel::finish()
-    {
-        return this->Tcl.size() == motionIdx;
+        return Tcl[0];
     }
 }

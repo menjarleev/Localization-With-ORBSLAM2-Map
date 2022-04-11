@@ -76,6 +76,9 @@ namespace ORB_SLAM2
         // 追踪器，除了进行运动追踪外还要负责创建关键帧、创建新地图点和进行重定位的工作。详细信息还得看相关文件
         Tracking *mpTracker;
 
+        //指向地图（数据库）的指针
+        // Map structure that stores the pointers to all KeyFrames and MapPoints.
+        Map *mpMap;
     public:
         // Initialize the SLAM system. It launches the Local Mapping, Loop Closing and Viewer threads.
         //构造函数，用来初始化整个系统。
@@ -181,9 +184,6 @@ namespace ORB_SLAM2
         // 关键帧数据库的指针，这个数据库用于重定位和回环检测
         KeyFrameDatabase *mpKeyFrameDatabase;
 
-        //指向地图（数据库）的指针
-        // Map structure that stores the pointers to all KeyFrames and MapPoints.
-        Map *mpMap;
 
         // Local Mapper. It manages the local map and performs local bundle adjustment.
         //局部建图器。局部BA由它进行。

@@ -21,39 +21,69 @@ using namespace std;
 using namespace ORB_SLAM2;
 using namespace PF;
 
+void SavePose(const string &filename, ParticleFilter &pf);
+
 int main(int argc, char **argv)
 {
-    if (argc != 5)
+    if (argc != 6)
     {
         cerr << endl
-             << "Usage: ./localization path_to_vocabulary path_to_settings path_to_sequence path_to_motion" << endl;
+             << "Usage: ./localization path_to_vocabulary path_to_settings path_to_sequence path_to_motion pose_save_path" << endl;
         return 1;
     }
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
     ORB_SLAM2::System SLAM(argv[1], argv[2], ORB_SLAM2::System::STEREO, false);
 
-    ObservationModel obModel;
+    ObservationModel obModel(SLAM.mpMap->GetAllMapPoints());
     obModel.LoadImageSequence(argv[3]);
     MotionModel moModel;
     moModel.LoadMotions(argv[4]);
     Matrix4d initPose = moModel.GetInitPose();
-    Matrix6d initPoseCov;
-    initPoseCov.diagonal() << 0.5, 0.5, 0.5, 0.5, 0.5, 0.5;
-    ParticleFilter pf = ParticleFilter(initPose, initPoseCov, false);
-    while (!obModel.finish() || !moModel.finish())
+    Matrix6d pose_cov;
+    pose_cov.diagonal() << 1, 1, 1, 1, 1, 1;
+    ParticleFilter pf = ParticleFilter(initPose, pose_cov, true);
+    size_t NFrame = obModel.strImageLeft.size();
+    // get initial mean and covariance
+    pf.getMeanAndCovariance();
+    for (int i = 1; i < NFrame; i++)
     {
-        if (!moModel.finish())
+        double start = obModel.timestamps[i];
+        double end = obModel.timestamps[i - 1];
+        moModel.SampleMotion(pf.particles, end - start, i);
+        obModel.sampleObservation(pf.particles, *SLAM.mpTracker, i);
+        double sqrtSum = .0f;
+        for (int i = 0; i < pf.particles.size(); i++)
         {
-            double start = obModel.timestamps[moModel.motionIdx - 1];
-            double end = obModel.timestamps[moModel.motionIdx];
-            moModel.SampleMotion(pf.particles, end - start);
+            sqrtSum += pf.particles[i].weight * pf.particles[i].weight;
         }
-        if (!obModel.finish())
+        int Neff = 1 / sqrtSum;
+        if (Neff < NParticle / 5)
         {
-            obModel.sampleObservation(pf.particles, *SLAM.mpTracker);
+            pf.Resample();
         }
+        pf.getMeanAndCovariance();
     }
+
+    SavePose(argv[5], pf);
     // Stop all threads
     SLAM.Shutdown();
+}
+
+void SavePose(const string &filename, ParticleFilter &pf)
+{
+    cout << endl
+         << "Saving camera pose to" << filename << "..." << endl;
+    const auto &poses = pf.meanPose;
+    ofstream f;
+    f.open(filename.c_str());
+    for (const auto &pose : poses)
+    {
+        f << setprecision(6) << pose(0, 0) << " " << pose(0, 1) << " " << pose(0, 2) << " " << pose(0, 3) << " "
+          << pose(1, 0) << " " << pose(1, 1) << " " << pose(1, 2) << " " << pose(1, 3) << " "
+          << pose(2, 0) << " " << pose(2, 1) << " " << pose(2, 2) << " " << pose(2, 3) << endl;
+    }
+    f.close();
+    cout << endl
+         << "pose saved" << endl;
 }

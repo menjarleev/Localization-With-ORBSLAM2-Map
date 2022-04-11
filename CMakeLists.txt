@@ -2,25 +2,25 @@ cmake_minimum_required(VERSION 2.8)
 project(ORB_SLAM2)
 
 IF(NOT CMAKE_BUILD_TYPE)
-  SET(CMAKE_BUILD_TYPE Debug)
+  SET(CMAKE_BUILD_TYPE Release)
 ENDIF()
 
 MESSAGE("Build type: " ${CMAKE_BUILD_TYPE})
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall  -O0 -march=native ")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall   -O0 -march=native")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall  -O3 -march=native ")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall   -O3 -march=native")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-# add_definitions(-DCOMPILEDWITHC14)
+# add_definitions(-DCOMPILEDWITHC17)
 
 
 # Check C++11 or C++0x support
 include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++14" COMPILER_SUPPORTS_CXX14)
+CHECK_CXX_COMPILER_FLAG("-std=c++17" COMPILER_SUPPORTS_CXX17)
 CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
-if(COMPILER_SUPPORTS_CXX14)
-   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14")
-   add_definitions(-DCOMPILEDWITHC14)
-   message(STATUS "Using flag -std=c++14.")
+if(COMPILER_SUPPORTS_CXX17)
+   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
+   add_definitions(-DCOMPILEDWITHC17)
+   message(STATUS "Using flag -std=c++17.")
 elseif(COMPILER_SUPPORTS_CXX0X)
    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
    add_definitions(-DCOMPILEDWITHC0X)
@@ -31,7 +31,7 @@ endif()
 
 
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules )
-LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/Thirdparty/g2o/cmake_modules )
+# LIST(APPEND CMAKE_MODULE_PATH $/home/lingfei/pkg/g2o-20170730_git/cmake_modules)
 find_library(BOOST_SERIALIZATION boost_serialization)
 if (NOT BOOST_SERIALIZATION)
     message(FATAL_ERROR "Can't find libboost_serialization")
@@ -45,13 +45,41 @@ if(NOT OpenCV_FOUND)
    endif()
 endif()
 
-set(G2O_ROOT /usr/local/include/g2o)
+set(G2O_INCLUDE_DIRS "/usr/local/include/g2o")
+set(G2O_LIBS
+libg2o_cli.so
+libg2o_core.so
+libg2o_csparse_extension.so
+libg2o_ext_freeglut_minimal.so
+libg2o_hierarchical.so
+libg2o_incremental.so
+libg2o_interactive.so
+libg2o_interface.so
+libg2o_opengl_helper.so
+libg2o_parser.so
+libg2o_simulator.so
+libg2o_solver_cholmod.so
+libg2o_solver_csparse.so
+libg2o_solver_dense.so
+libg2o_solver_eigen.so
+libg2o_solver_pcg.so
+libg2o_solver_slam2d_linear.so
+libg2o_solver_structure_only.so
+libg2o_stuff.so
+libg2o_types_data.so
+libg2o_types_icp.so
+libg2o_types_sba.so
+libg2o_types_sclam2d.so
+libg2o_types_sim3.so
+libg2o_types_slam2d_addons.so
+libg2o_types_slam2d.so
+libg2o_types_slam3d_addons.so
+libg2o_types_slam3d.so)
 
 SET(Sophus_INCLUDE_DIR "usr/local/include/sophus")
 find_package(Eigen3 3.3.2 REQUIRED)
 find_package(Pangolin REQUIRED)
 find_package(FMT REQUIRED)
-find_package(G2O REQUIRED)
 
 include_directories(
 ${PROJECT_SOURCE_DIR}
@@ -92,6 +120,7 @@ extension/src/ObservationModel.cc
 extension/src/KeyPointDecorator.cc
 extension/src/OctFeatMap.cc
 extension/src/FrameDecorator.cc
+extension/src/Utils.cc
 )
 
 target_link_libraries(${PROJECT_NAME}

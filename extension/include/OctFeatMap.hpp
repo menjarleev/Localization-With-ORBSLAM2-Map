@@ -11,7 +11,8 @@
 using namespace ORB_SLAM2;
 namespace PF
 {
-    const int TH_DIST = 10;
+    const int TH_DIST_HIGH = 100;
+    const int TH_DIST_LOW = 50;
     const double TH_RATIO = 0.6;
     struct PointCloudAdaptor
     {
@@ -49,7 +50,7 @@ namespace PF
         int DescriptorDistance(const cv::Mat &a, const cv::Mat &b);
 
     public:
-        OctFeatMap(std::set<MapPoint *> sMapPoints);
+        OctFeatMap(std::vector<MapPoint *> sMapPoints);
         bool FindMatch(KeyPointDecorator &kp, Particle &particle, const double radius);
     };
 

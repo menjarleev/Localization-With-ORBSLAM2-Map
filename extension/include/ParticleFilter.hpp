@@ -10,7 +10,6 @@
 #include <cmath>
 #include <random>
 
-int NParticle = 1000;
 using namespace cv;
 using namespace std;
 using namespace Eigen;
@@ -21,21 +20,26 @@ typedef Eigen::Matrix<double, 6, 6> Matrix6d;
 typedef std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> EigenMatrix4dVector;
 namespace PF
 {
-    struct Particle
+    class Particle
     {
+    public:
         static int GUID;
         Matrix4d pose;
         double weight;
         int idx;
-        Particle(Matrix4d pose, double weight) : pose(pose), weight(weight), idx(GUID++){};
+        Particle(Matrix4d &pose, double weight, int idx) : pose(pose), weight(weight), idx(idx){};
+        EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     };
 
     class ParticleFilter
     {
     public:
+        vector<Matrix4d> meanPose;
+        vector<Matrix6d> sigma;
         std::vector<Particle> particles;
-        ParticleFilter(Matrix4d init_pose = Matrix4d().Zero(), Matrix6d pose_cov = Matrix6d().Zero(), bool has_init_pose = false);
+        ParticleFilter(const Matrix4d &init_pose = Matrix4d().Identity(), const Matrix6d &pose_cov = Matrix6d(), bool has_init_pose = false);
         void Resample();
+        void getMeanAndCovariance();
     };
 
 }

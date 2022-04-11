@@ -2,18 +2,19 @@
 #include <Eigen/StdVector>
 #include "Utils.hpp"
 using namespace Eigen;
+
+int NParticle = 100;
 namespace PF
 {
     // GUID starts from 0
     int Particle::GUID = 0;
 
-    ParticleFilter::ParticleFilter(Matrix4d init_pose, Matrix6d pose_cov, bool has_init_pose)
+    ParticleFilter::ParticleFilter(const Matrix4d &init_pose, const Matrix6d &pose_cov_, bool has_init_pose)
     {
+        Matrix6d pose_cov = pose_cov_;
         // if no initial pose provided, initialize pose with large covariance
         if (!has_init_pose)
         {
-            init_pose.diagonal() << 1, 1, 1, 1;
-            pose_cov.setZero();
             pose_cov.diagonal() << 10000, 10000, 10000, 10000, 10000, 10000;
         }
         // cholesky decomposition
@@ -32,7 +33,7 @@ namespace PF
             Vector6d noise = SampleNoise(L);
             Vector6d randPose_se3 = init_pose_SE3d.log() + noise;
             Matrix4d randPose = SE3d::exp(randPose_se3).matrix();
-            particles.emplace_back(randPose, weight);
+            particles.emplace_back(randPose, weight, Particle::GUID++);
         }
     }
 
@@ -57,5 +58,32 @@ namespace PF
             particles[i] = particles[j];
             particles[i].weight = ((double)1) / NParticle;
         }
+    }
+
+    void ParticleFilter::getMeanAndCovariance()
+    {
+        // convert pose into se3
+        Vector6d mean;
+        vector<Vector6d> poses_se3;
+        poses_se3.reserve(particles.size());
+        mean.Zero();
+        for (int i = 0; i < particles.size(); i++)
+        {
+            Vector6d pose_se3 = SE3d(particles[i].pose).log();
+            poses_se3[i] = pose_se3;
+            mean += pose_se3;
+        }
+        mean /= particles.size();
+        MatrixXd zeroMean(6, particles.size());
+        for (int i = 0; i < particles.size(); i++)
+        {
+            auto diff = poses_se3[i] - mean;
+            for (int j = 0; j < 6; j++)
+            {
+                zeroMean(j, i) = diff(j);
+            }
+        }
+        this->sigma.push_back(zeroMean * zeroMean.transpose() / particles.size());
+        this->meanPose.push_back(SE3d::exp(mean).matrix());
     }
 }

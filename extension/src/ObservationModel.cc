@@ -4,11 +4,13 @@
 
 namespace PF
 {
-    int ObservationModel::observationIdx = 0;
+    int RADIUS = 50;
 
-    ObservationModel::ObservationModel() : currentFrameDec(shared_ptr<FrameDecorator>(nullptr)) {}
+    ObservationModel::ObservationModel(vector<MapPoint *> mapPoints) : currentFrameDec(shared_ptr<FrameDecorator>(nullptr)), featMap(mapPoints)
+    {
+    }
 
-    void ObservationModel::sampleObservation(vector<Particle>& particles, Tracking& tracker)
+    void ObservationModel::sampleObservation(vector<Particle> &particles, Tracking &tracker, int observationIdx)
     {
         // Read left and right images from file
         cv::Mat imageRectLeft = cv::imread(strImageLeft[observationIdx], CV_LOAD_IMAGE_UNCHANGED);
@@ -23,13 +25,22 @@ namespace PF
             return;
         }
         GetObservation(imageRectLeft, imageRectRight, tframe, tracker);
+        for (int i = 0; i < currentFrameDec->keyPoints.size(); i++)
+        {
+            KeyPointDecorator &kp = currentFrameDec->keyPoints[i];
+            for (int j = 0; j < particles.size(); j++)
+            {
+                Particle &particle = particles[j];
+                featMap.FindMatch(kp, particle, RADIUS);
+            }
+        }
         ImportanceMeasurement(particles);
         observationIdx++;
     }
 
     void ObservationModel::GetObservation(const cv::Mat &imRectLeft, const cv::Mat &imRectRight, const double &timestamp, Tracking &tracker)
     {
-        currentFrameDec = shared_ptr<FrameDecorator>(new FrameDecorator(tracker.GetFrameForObservation(imRectLeft, imRectRight, timestamp)));
+        currentFrameDec = shared_ptr<FrameDecorator>(new FrameDecorator(tracker.GetFrameForObservation(imRectLeft, imRectRight, timestamp), imRectLeft.rows, imRectLeft.cols));
     }
 
     void ObservationModel::ImportanceMeasurement(vector<Particle> &particles)
@@ -45,31 +56,43 @@ namespace PF
                 for (int j = 0; j < particles.size(); j++)
                 {
                     // if there is a match for particle j for key point i
-                    if (kp.matched[i])
+                    if (kp.matched[j])
                     {
-                        // get the rotation and transformation matrix for current particle hypothesis
-                        cv::Mat Tcw_hat = ORB_SLAM2::Converter::toCvMat(particles[j].pose);
-                        cv::Mat R = Tcw_hat.rowRange(0, 3).colRange(0, 3);
-                        cv::Mat t = Tcw_hat.rowRange(0, 3).col(3);
-                        cv::Mat T_feat_hat = R * kp.x3Dc + t;
-
+                        cv::Mat p = kp.x3Dc;
+                        Matrix4d Tcw_eigen;
+                        Matrix3d R = particles[j].pose.block(0, 0, 3, 3);
+                        Vector3d t = particles[j].pose.block(0, 3, 3, 1);
+                        Tcw_eigen.block(0, 0, 3, 3) = R.transpose();
+                        Tcw_eigen.block(0, 3, 3, 1) = -R.transpose() * t;
+                        Tcw_eigen(3, 3) = 1;
+                        cv::Mat Tcw_hat = ORB_SLAM2::Converter::toCvMat(Tcw_eigen);
+                        cv::Mat Rcw = Tcw_hat.rowRange(0, 3).colRange(0, 3);
+                        cv::Mat tcw = Tcw_hat.rowRange(0, 3).col(3);
+                        cv::Mat T_feat_hat = Rcw * p + tcw;
                         // calculate the reporjection error
                         double invZ1 = 1 / T_feat_hat.at<float>(2);
-                        double u_hat = currentFrameDec->frame.fx * T_feat_hat.at<float>(0) * invZ1 + currentFrameDec->frame.cx;
-                        double v_hat = currentFrameDec->frame.fy * T_feat_hat.at<float>(1) * invZ1 + currentFrameDec->frame.cy;
-                        double sqError = (u_hat - kp.data.pt.x) * (u_hat - kp.data.pt.x) + (v_hat - kp.data.pt.y) * (v_hat - kp.data.pt.y);
-                        kp.reprojectionErrors[j] = sqError;
+                        const auto &frame = currentFrameDec->frame;
+                        double u_hat = frame.fx * T_feat_hat.at<float>(0) * invZ1 + frame.cx;
+                        double v_hat = frame.fy * T_feat_hat.at<float>(1) * invZ1 + frame.cy;
+                        if (u_hat < frame.mnMinX || v_hat < frame.mnMinY || u_hat >= frame.mnMaxX || v_hat >= frame.mnMaxY)
+                        {
+                            kp.matched[j] = false;
+                            continue;
+                        }
+                        double sqrtError = sqrt((u_hat - kp.data.pt.x) * (u_hat - kp.data.pt.x) + (v_hat - kp.data.pt.y) * (v_hat - kp.data.pt.y));
+                        kp.reprojectionErrors[j] = sqrtError;
 
                         // update max reprojection error for later use
-                        if (sqError > kp.maxReprojectionError)
+                        if (sqrtError > kp.maxReprojectionError)
                         {
-                            kp.maxReprojectionError = sqError;
+                            kp.maxReprojectionError = sqrtError;
                         }
                     }
                 }
             }
         }
 
+        double weightSum = .0f;
         for (int i = 0; i < particles.size(); i++)
         {
             double error = 0; // reprojection error
@@ -80,7 +103,7 @@ namespace PF
                 if (kp.numMatch > 0)
                 {
                     // no match for particle i at keypoint j
-                    if (kp.matched[i] == -1)
+                    if (!kp.matched[i])
                     {
                         error += kp.weight * kp.maxReprojectionError; // add noise caused by scale
                     }
@@ -89,11 +112,17 @@ namespace PF
                     {
                         error += kp.weight * kp.reprojectionErrors[i];
                     }
-                    R += kp.weight * kp.sigma * kp.weight; // R = WSW^T
+                    R += kp.sigma * kp.weight; // R = WSW^T
                 }
             }
             // assign weigh for particles
-            particles[i].weight = GaussianPDF(error, 0, R);
+            particles[i].weight *= GaussianPDF(error, 0, R);
+            weightSum += particles[i].weight;
+        }
+
+        for (int i = 0; i < particles.size(); i++)
+        {
+            particles[i].weight /= weightSum;
         }
     }
 
@@ -130,10 +159,5 @@ namespace PF
             strImageLeft[i] = strPrefixLeft + ss.str() + ".png";
             strImageRight[i] = strPrefixRight + ss.str() + ".png";
         }
-    }
-
-    bool ObservationModel::finish()
-    {
-        return this->strImageLeft.size() == observationIdx;
     }
 }

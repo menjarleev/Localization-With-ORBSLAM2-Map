@@ -13,12 +13,10 @@ namespace PF
         EigenMatrix4dVector Tcl;
 
     public:
-        static int motionIdx;
-        bool finish();
         Matrix4d GetInitPose();
         MotionModel(std::vector<double> alpha = std::vector<double>(6, 0.01));
         void LoadMotions(const std::string &strPathToSequence);
-        void SampleMotion(std::vector<Particle> &particles, double timeElapse);
+        void SampleMotion(std::vector<Particle> &particles, double timeElapse, int motionIdx);
     };
 }
 #endif

@@ -15,8 +15,8 @@ namespace PF
         const Frame &frame;
         std::vector<KeyPointDecorator> keyPoints;
 
-        FrameDecorator(Frame &frame);
-        FrameDecorator(Frame frame);
+        FrameDecorator(Frame &frame, int height, int width);
+        FrameDecorator(Frame frame, int height, int width);
         FrameDecorator &operator=(const FrameDecorator &fd);
         void assignWeightForKeyPoints();
     };

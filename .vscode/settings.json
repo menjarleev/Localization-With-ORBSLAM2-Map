@@ -130,6 +130,7 @@
 		"csignal": "cpp",
 		"codecvt": "cpp",
 		"future": "cpp",
-		"valarray": "cpp"
+		"valarray": "cpp",
+		"*.ipp": "cpp"
 	}
 }

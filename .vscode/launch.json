@@ -11,9 +11,10 @@
             "program": "${workspaceFolder}/extension/localization",
             "args": [
                 "${workspaceFolder}/Vocabulary/ORBvoc.txt",
-                "${workspaceFolder}/extension/src/KITTI04-12-localization.yaml",
+                "${workspaceFolder}/extension/config/KITTI04-12-localization.yaml",
                 "/data/dataset/sequences/04",
-                "/data/motion/result_seq_04.txt"
+                "/data/motion/result_seq_04.txt",
+                "${workspaceFolder}/extension/predict_pose.txt"
             ],
             "environment": [
                 {
@@ -45,7 +46,7 @@
             "program": "${workspaceFolder}/extension/mapsaver",
             "args": [
                 "${workspaceFolder}/Vocabulary/ORBvoc.txt",
-                "${workspaceFolder}/extension/src/KITTI04-12-save_map.yaml",
+                "${workspaceFolder}/extension/config/KITTI04-12-save_map.yaml",
                 "/data/dataset/sequences/04"
             ],
             "stopAtEntry": false,

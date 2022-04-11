@@ -10,8 +10,7 @@ namespace PF
      * @param[in] x3Dc 3D pose in camera frame
      * @param[in] data (u, v) coordinate in observation
      */
-    KeyPointDecorator::KeyPointDecorator(const cv::Mat &descriptor, cv::Mat x3Dc, cv::KeyPoint &data, double cov) :
-    descriptor(descriptor), x3Dc(x3Dc), data(data), maxReprojectionError(0), sigma(sqrt(cov))
+    KeyPointDecorator::KeyPointDecorator(const cv::Mat& descriptor, const cv::Mat& x3Dc, cv::KeyPoint data, double cov) : descriptor(descriptor.clone()), x3Dc(x3Dc.clone()), data(data), maxReprojectionError(0), sigma(sqrt(cov))
     {
         // initalize as all particles do not find the keypoint
         numMatch = 0;
