@@ -14,8 +14,8 @@ Pangolin
 ## Build
 1. Make sure you have ```C++17``` in your PC
 2. In ```CMakeLists.txt```, modify ```set(G2O_INCLUDE_DIRS "/usr/local/include/g2o")``` to wherever you have g2o header. Modify ```SET(Sophus_INCLUDE_DIR "usr/local/include/sophus")``` to wherever you have sophus header.
-3. run ```bash ./build.sh ```
-remark: if you want your program to run faster, go CMakeLists.txt, change
+3. run ```./build.sh ```
+remark: if you want your program to run faster, go ```CMakeLists.txt```, change
 ```CMake
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall  -O0 -march=native ")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall   -O0 -march=native")
