@@ -39,10 +39,10 @@ void LoadImages(const string &strPathToSequence, vector<string> &vstrImageLeft,
 
 int main(int argc, char **argv)
 {
-    if (argc != 4)
+    if (argc != 5)
     {
         cerr << endl
-             << "Usage: ./stereo_kitti path_to_vocabulary path_to_settings path_to_sequence" << endl;
+             << "Usage: ./extension/mapsaver path_to_vocabulary path_to_settings path_to_sequence map_file" << endl;
         return 1;
     }
 
@@ -55,7 +55,7 @@ int main(int argc, char **argv)
     const int nImages = vstrImageLeft.size();
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    ORB_SLAM2::System SLAM(argv[1], argv[2], ORB_SLAM2::System::STEREO, false);
+    ORB_SLAM2::System SLAM(argv[1], argv[2], ORB_SLAM2::System::STEREO, false, true);
 
     // Vector for tracking time statistics
     vector<double> vTimesTrack;
@@ -136,7 +136,7 @@ int main(int argc, char **argv)
     SLAM.SaveTrajectoryKITTI("CameraTrajectory.txt");
 
     // save map at last
-    SLAM.SaveMap(SLAM.mapfile);
+    SLAM.SaveMap(argv[4]);
     return 0;
 }
 

@@ -28,19 +28,22 @@
 #include <pangolin/pangolin.h> //可视化界面
 #include <iomanip>             //主要是对cin,cout之类的一些操纵运算子
 #include <unistd.h>
+
 namespace ORB_SLAM2
 {
 
     //系统的构造函数，将会启动其他的线程
-    System::System(const string &strVocFile,                                       //词典文件路径
-                   const string &strSettingsFile,                                  //配置文件路径
-                   const eSensor sensor,                                           //传感器类型
-                   const bool bUseViewer) :                                        //是否使用可视化界面
-                                            mSensor(sensor),                       //初始化传感器类型
-                                            mpViewer(static_cast<Viewer *>(NULL)), //空。。。对象指针？  TODO
-                                            mbReset(false),                        //无复位标志
-                                            mbActivateLocalizationMode(false),     //没有这个模式转换标志
-                                            mbDeactivateLocalizationMode(false)    //没有这个模式转换标志
+    System::System(const string &strVocFile,      //词典文件路径
+                   const string &strSettingsFile, //配置文件路径
+                   const eSensor sensor,          //传感器类型
+                   const bool bUseViewer,
+                   const bool saveMap,
+                   const string mapFile) :                                        //是否使用可视化界面
+                                         mSensor(sensor),                       //初始化传感器类型
+                                         mpViewer(static_cast<Viewer *>(NULL)), //空。。。对象指针？  TODO
+                                         mbReset(false),                        //无复位标志
+                                         mbActivateLocalizationMode(false),     //没有这个模式转换标志
+                                         mbDeactivateLocalizationMode(false)    //没有这个模式转换标志
     {
         // Output welcome message
         cout << endl
@@ -91,14 +94,7 @@ namespace ORB_SLAM2
         cout << "Vocabulary loaded!" << endl
              << endl;
 
-        load_map = fsSettings["PF.Map.load_map"];
-        save_map = fsSettings["PF.Map.save_map"];
-        cv::FileNode mapfile_node = fsSettings["PF.Map.mapfile"];
-        if (!mapfile_node.empty())
-        {
-            mapfile = (string)mapfile_node;
-        }
-        cout << "MapFile name: " << mapfile << endl;
+        cout << "MapFile name: " << mapFile << endl;
 
         // Create KeyFrame Database
         mpKeyFrameDatabase = new KeyFrameDatabase(mpVocabulary);
@@ -107,7 +103,7 @@ namespace ORB_SLAM2
         mpMap = new Map();
         bReuseMap = false;
 
-        if (load_map && !mapfile.empty() && LoadMap(mapfile))
+        if (!saveMap && !mapFile.empty() && LoadMap(mapFile))
         {
             bReuseMap = true;
             // {
@@ -662,10 +658,10 @@ namespace ORB_SLAM2
         std::ifstream in(filename, std::ios_base::binary);
         if (!in)
         {
-            cerr << "Cannot Open Mapfile: " << mapfile << ". No existing map file found!" << std::endl;
+            cerr << "Cannot Open Mapfile: " << filename << ". No existing map file found!" << std::endl;
             return false;
         }
-        cout << "Loading Mapfile: " << mapfile << "....." << std::flush;
+        cout << "Loading Mapfile: " << filename << "....." << std::flush;
         boost::archive::binary_iarchive ia(in, boost::archive::no_header);
         ia >> mpMap;
         ia >> mpKeyFrameDatabase;
@@ -696,10 +692,10 @@ namespace ORB_SLAM2
         std::ofstream out(filename, std::ios_base::binary);
         if (!out)
         {
-            cerr << "Cannot Write to Mapfile: " << mapfile << std::endl;
+            cerr << "Cannot Write to Mapfile: " << filename << std::endl;
             exit(-1);
         }
-        cout << "Saving Mapfile: " << mapfile << " ...." << std::flush;
+        cout << "Saving Mapfile: " << filename << " ...." << std::flush;
         boost::archive::binary_oarchive oa(out, boost::archive::no_header);
         // Saving an instance of Map / KeyFrameDatabase here invokes the relevant serialize function which saves
         // all the Map class member variables (mostly private). We just have to apply an archive operator (<<)

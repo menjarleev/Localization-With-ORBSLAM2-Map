@@ -24,4 +24,10 @@ doc/
 *~
 lib/
 */html/
+**/**/*.bin
+**/**/pose_*.txt
+**/**/.vscode
+extension/mapsaver
+extension/localization
+
 

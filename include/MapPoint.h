@@ -226,6 +226,14 @@ namespace ORB_SLAM2
         int PredictScale(const float &currentDist, Frame *pF);
 
     public:
+        // Best descriptor to fast matching
+        // 每个3D点也有一个描述子，但是这个3D点可以观测多个二维特征点，从中选择一个最有代表性的
+        //通过 ComputeDistinctiveDescriptors() 得到的最有代表性描述子,距离其它描述子的平均距离最小
+        cv::Mat mDescriptor;
+
+        // Position in absolute coordinates
+        cv::Mat mWorldPos; ///< MapPoint在世界坐标系下的坐标
+
         long unsigned int mnId; ///< Global ID for MapPoint
         static long unsigned int nNextId;
         long int mnFirstKFid; ///< 创建该MapPoint的关键帧ID
@@ -277,9 +285,6 @@ namespace ORB_SLAM2
         static std::mutex mGlobalMutex;
 
     protected:
-        // Position in absolute coordinates
-        cv::Mat mWorldPos; ///< MapPoint在世界坐标系下的坐标
-
         // Keyframes observing the point and associated index in keyframe
         // 观测到该MapPoint的KF和该MapPoint在KF中的索引
         std::map<KeyFrame *, size_t> mObservations;
@@ -288,11 +293,6 @@ namespace ORB_SLAM2
         // 该MapPoint平均观测方向
         // 用于判断点是否在可视范围内
         cv::Mat mNormalVector;
-
-        // Best descriptor to fast matching
-        // 每个3D点也有一个描述子，但是这个3D点可以观测多个二维特征点，从中选择一个最有代表性的
-        //通过 ComputeDistinctiveDescriptors() 得到的最有代表性描述子,距离其它描述子的平均距离最小
-        cv::Mat mDescriptor;
 
         /// Reference KeyFrame
         // 通常情况下MapPoint的参考关键帧就是创建该MapPoint的那个关键帧

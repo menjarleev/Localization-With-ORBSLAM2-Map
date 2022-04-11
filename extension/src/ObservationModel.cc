@@ -4,7 +4,6 @@
 
 namespace PF
 {
-    int RADIUS = 50;
 
     ObservationModel::ObservationModel(vector<MapPoint *> mapPoints) : currentFrameDec(shared_ptr<FrameDecorator>(nullptr)), featMap(mapPoints)
     {

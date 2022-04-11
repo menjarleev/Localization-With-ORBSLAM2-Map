@@ -21,27 +21,33 @@ using namespace std;
 using namespace ORB_SLAM2;
 using namespace PF;
 
+extern vector<double> alpha;
+extern ArrayXd poseCov;
+
 void SavePose(const string &filename, ParticleFilter &pf);
 
 int main(int argc, char **argv)
 {
-    if (argc != 6)
+    poseCov.setZero();
+    // ! modify alpha here
+    poseCov << 0.1, 0.1, 0.1, 0.1, 0.1, 0.1;
+    if (argc != 7)
     {
         cerr << endl
-             << "Usage: ./localization path_to_vocabulary path_to_settings path_to_sequence path_to_motion pose_save_path" << endl;
+             << "Usage: ./localization path_to_vocabulary path_to_settings path_to_sequence map_file path_to_motion pose_save_path" << endl;
         return 1;
     }
 
     // Create SLAM system. It initializes all system threads and gets ready to process frames.
-    ORB_SLAM2::System SLAM(argv[1], argv[2], ORB_SLAM2::System::STEREO, false);
+    ORB_SLAM2::System SLAM(argv[1], argv[2], ORB_SLAM2::System::STEREO, false, false, argv[4]);
 
     ObservationModel obModel(SLAM.mpMap->GetAllMapPoints());
     obModel.LoadImageSequence(argv[3]);
-    MotionModel moModel;
-    moModel.LoadMotions(argv[4]);
+    MotionModel moModel(alpha);
+    moModel.LoadMotions(argv[5]);
     Matrix4d initPose = moModel.GetInitPose();
     Matrix6d pose_cov;
-    pose_cov.diagonal() << 1, 1, 1, 1, 1, 1;
+    pose_cov.diagonal() << poseCov;
     ParticleFilter pf = ParticleFilter(initPose, pose_cov, true);
     size_t NFrame = obModel.strImageLeft.size();
     // get initial mean and covariance
@@ -65,7 +71,7 @@ int main(int argc, char **argv)
         pf.getMeanAndCovariance();
     }
 
-    SavePose(argv[5], pf);
+    SavePose(argv[6], pf);
     // Stop all threads
     SLAM.Shutdown();
 }

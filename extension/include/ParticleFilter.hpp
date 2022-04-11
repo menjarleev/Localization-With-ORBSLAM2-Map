@@ -15,6 +15,8 @@ using namespace std;
 using namespace Eigen;
 using namespace Sophus;
 
+extern int NParticle;
+
 typedef Eigen::Matrix<double, 6, 1> Vector6d;
 typedef Eigen::Matrix<double, 6, 6> Matrix6d;
 typedef std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> EigenMatrix4dVector;

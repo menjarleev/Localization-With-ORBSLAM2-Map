@@ -8,12 +8,15 @@
 #include "ORBmatcher.h"
 #include <set>
 #include <vector>
+
+extern int TH_DIST_HIGH;
+extern int TH_DIST_LOW;
+extern double TH_RATIO;
+
 using namespace ORB_SLAM2;
+
 namespace PF
 {
-    const int TH_DIST_HIGH = 100;
-    const int TH_DIST_LOW = 50;
-    const double TH_RATIO = 0.6;
     struct PointCloudAdaptor
     {
         const std::vector<MapPoint *> &mapPoints;
@@ -26,11 +29,11 @@ namespace PF
         inline double kdtree_get_pt(const size_t idx, const size_t dim) const
         {
             if (dim == 0)
-                return mapPoints[idx]->GetWorldPos().at<double>(0);
+                return mapPoints[idx]->mWorldPos.at<double>(0);
             else if (dim == 1)
-                return mapPoints[idx]->GetWorldPos().at<double>(1);
+                return mapPoints[idx]->mWorldPos.at<double>(1);
             else
-                return mapPoints[idx]->GetWorldPos().at<double>(2);
+                return mapPoints[idx]->mWorldPos.at<double>(2);
         }
         template <class BBOX>
         bool kdtree_get_bbox(BBOX &bb) const

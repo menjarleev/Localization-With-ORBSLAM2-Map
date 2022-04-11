@@ -66,10 +66,6 @@ namespace ORB_SLAM2
             RGBD = 2
         };
 
-        string mapfile;
-        int save_map;
-        int load_map;
-
         // Tracker. It receives a frame and computes the associated camera pose.
         // It also decides when to insert a new keyframe, create some new MapPoints and
         // performs relocalization if tracking fails.
@@ -79,13 +75,16 @@ namespace ORB_SLAM2
         //指向地图（数据库）的指针
         // Map structure that stores the pointers to all KeyFrames and MapPoints.
         Map *mpMap;
+
     public:
         // Initialize the SLAM system. It launches the Local Mapping, Loop Closing and Viewer threads.
         //构造函数，用来初始化整个系统。
-        System(const string &strVocFile,      //指定ORB字典文件的路径
-               const string &strSettingsFile, //指定配置文件的路径
-               const eSensor sensor,          //指定所使用的传感器类型
-               const bool bUseViewer = true); //指定是否使用可视化界面 TODO
+        System(const string &strVocFile,                                //指定ORB字典文件的路径
+               const string &strSettingsFile,                           //指定配置文件的路径
+               const eSensor sensor,                                    //指定所使用的传感器类型
+               const bool bUseViewer = true,
+               const bool saveMap = true,
+               const string mapFile = "map00.bin");
 
         //下面是针对三种不同类型的传感器所设计的三种运动追踪接口。彩色图像为CV_8UC3类型，并且都将会被转换成为灰度图像。
         //追踪接口返回估计的相机位姿，如果追踪失败则返回NULL
@@ -183,7 +182,6 @@ namespace ORB_SLAM2
         // KeyFrame database for place recognition (relocalization and loop detection).
         // 关键帧数据库的指针，这个数据库用于重定位和回环检测
         KeyFrameDatabase *mpKeyFrameDatabase;
-
 
         // Local Mapper. It manages the local map and performs local bundle adjustment.
         //局部建图器。局部BA由它进行。

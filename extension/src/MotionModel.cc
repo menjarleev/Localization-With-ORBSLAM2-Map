@@ -22,24 +22,37 @@ namespace PF
     {
         ifstream fSE3;
         fSE3.open(strPathToSequence.c_str());
+        bool uninitialized = true;
+        Eigen::Matrix4d Twl; // last to world
         while (!fSE3.eof())
         {
             string s;
             getline(fSE3, s);
             if (!s.empty())
             {
-                Eigen::Matrix4d m;
+                Eigen::Matrix4d Tcw;
                 stringstream ss(s);
                 vector<double> R_T(12, 0);
                 for (int i = 0; i < 12; i++)
                 {
                     ss >> R_T[i];
                 }
-                m << R_T[0], R_T[1], R_T[2], R_T[3], R_T[4], R_T[5], R_T[6], R_T[7], R_T[8], R_T[9], R_T[10], R_T[11], 0, 0, 0, 1;
-                // normalize  matrix
-                m.block<3, 3>(0, 0) = Eigen::Quaterniond(m.block<3, 3>(0, 0)).normalized().toRotationMatrix();
-                // cout << SE3_R.matrix() << endl;
-                Tcl.emplace_back(m);
+                Tcw << R_T[0], R_T[1], R_T[2], R_T[3], R_T[4], R_T[5], R_T[6], R_T[7], R_T[8], R_T[9], R_T[10], R_T[11], 0, 0, 0, 1;
+                if (uninitialized)
+                {
+                    Tcl.emplace_back(Tcw);
+                    uninitialized = false;
+                }
+                else
+                {
+                    Tcl.emplace_back(Tcw * Twl);
+                }
+                Twl.setZero();
+                Eigen::Matrix3d R = Tcw.block(0, 0, 3, 3);
+                Eigen::Vector3d t = Tcw.block(0, 3, 3, 1);
+                Twl.block(0, 0, 3, 3) = R.transpose();
+                Twl.block(0, 3, 3, 1) = -R.transpose() * t;
+                Twl(3, 3) = 1;
             }
         }
         fSE3.close();

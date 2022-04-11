@@ -6,6 +6,7 @@
 #include "Tracking.h"
 #include "FrameDecorator.hpp"
 
+extern int RADIUS;
 namespace PF
 {
     // visitor class of tracking

@@ -14,7 +14,7 @@ namespace PF
 
     public:
         Matrix4d GetInitPose();
-        MotionModel(std::vector<double> alpha = std::vector<double>(6, 0.01));
+        MotionModel(std::vector<double> alpha = std::vector<double>(6, 1));
         void LoadMotions(const std::string &strPathToSequence);
         void SampleMotion(std::vector<Particle> &particles, double timeElapse, int motionIdx);
     };

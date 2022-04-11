@@ -7,8 +7,8 @@ ENDIF()
 
 MESSAGE("Build type: " ${CMAKE_BUILD_TYPE})
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall  -O3 -march=native ")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall   -O3 -march=native")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall  -O0 -march=native ")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall   -O0 -march=native")
 # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 # add_definitions(-DCOMPILEDWITHC17)
 
@@ -31,7 +31,6 @@ endif()
 
 
 LIST(APPEND CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake_modules )
-# LIST(APPEND CMAKE_MODULE_PATH $/home/lingfei/pkg/g2o-20170730_git/cmake_modules)
 find_library(BOOST_SERIALIZATION boost_serialization)
 if (NOT BOOST_SERIALIZATION)
     message(FATAL_ERROR "Can't find libboost_serialization")
@@ -121,6 +120,7 @@ extension/src/KeyPointDecorator.cc
 extension/src/OctFeatMap.cc
 extension/src/FrameDecorator.cc
 extension/src/Utils.cc
+extension/config/GlobalVariable.cc
 )
 
 target_link_libraries(${PROJECT_NAME}
@@ -175,5 +175,9 @@ target_link_libraries(mapsaver ${PROJECT_NAME})
 add_executable(localization
 extension/Localization.cc)
 target_link_libraries(localization ${PROJECT_NAME})
+
+add_executable(evaluation
+extension/evaluation.cc)
+target_link_libraries(evaluation ${PROJECT_NAME})
 
 

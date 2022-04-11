@@ -3,7 +3,6 @@
 #include "Utils.hpp"
 using namespace Eigen;
 
-int NParticle = 100;
 namespace PF
 {
     // GUID starts from 0
@@ -15,7 +14,7 @@ namespace PF
         // if no initial pose provided, initialize pose with large covariance
         if (!has_init_pose)
         {
-            pose_cov.diagonal() << 10000, 10000, 10000, 10000, 10000, 10000;
+            pose_cov.diagonal() << 100, 100, 100, 100, 100, 100;
         }
         // cholesky decomposition
         LLT<MatrixXd> lltofPose_cov(pose_cov);
@@ -66,14 +65,15 @@ namespace PF
         Vector6d mean;
         vector<Vector6d> poses_se3;
         poses_se3.reserve(particles.size());
-        mean.Zero();
+        mean.setZero();
+        MatrixXd WMatrix(particles.size(), particles.size());
         for (int i = 0; i < particles.size(); i++)
         {
             Vector6d pose_se3 = SE3d(particles[i].pose).log();
             poses_se3[i] = pose_se3;
-            mean += pose_se3;
+            mean += particles[i].weight * pose_se3;
+            WMatrix(i, i) = particles[i].weight;
         }
-        mean /= particles.size();
         MatrixXd zeroMean(6, particles.size());
         for (int i = 0; i < particles.size(); i++)
         {
@@ -83,7 +83,7 @@ namespace PF
                 zeroMean(j, i) = diff(j);
             }
         }
-        this->sigma.push_back(zeroMean * zeroMean.transpose() / particles.size());
+        this->sigma.push_back(zeroMean * WMatrix * zeroMean.transpose());
         this->meanPose.push_back(SE3d::exp(mean).matrix());
     }
 }

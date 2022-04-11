@@ -26,14 +26,14 @@ namespace PF
         ret_index.resize(num_results);
         out_dist_sqr.resize(num_results);
 
-        int minDist1 = TH_DIST_LOW;
+        int minDist1 = (TH_DIST_LOW + TH_DIST_HIGH) / 2;
         int bestIdx = -1;
-        int minDist2 = TH_DIST_LOW;
+        int minDist2 = (TH_DIST_LOW + TH_DIST_HIGH) / 2;
         for (int i = 0; i < num_results; i++)
         {
             int idx = ret_index[i];
             MapPoint *reference = mapPoints[idx];
-            int tmpDist = DescriptorDistance(reference->GetDescriptor(), kp.descriptor);
+            int tmpDist = DescriptorDistance(reference->mDescriptor, kp.descriptor);
             if (tmpDist < minDist1)
             {
                 minDist2 = minDist1;
@@ -45,7 +45,7 @@ namespace PF
                 minDist2 = tmpDist;
             }
         }
-        if (minDist1 == TH_DIST_LOW)
+        if (minDist1 == (TH_DIST_LOW + TH_DIST_HIGH) / 2)
         {
             return false;
         }
