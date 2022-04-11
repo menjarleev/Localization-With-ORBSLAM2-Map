@@ -27,7 +27,7 @@ lib/
 **/**/*.bin
 **/**/pose_*.txt
 **/**/.vscode
-extension/mapsaver
+**/**/mapsaver
 extension/localization
-
-
+extension/mapsaver
+cmake_modules
